@@ -21,24 +21,30 @@ export function IssueList({
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className="rounded-xl border p-4">
+          <div
+            key={i}
+            className="rounded-xl border bg-card p-4"
+            style={{ animationDelay: `${i * 60}ms` }}
+          >
             <div className="mb-3 flex items-center gap-2">
-              <Skeleton className="h-3 w-32" />
-              <Skeleton className="size-1.5 rounded-full" />
-              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-4 w-28 rounded-md" />
+              <Skeleton className="h-4 w-14 rounded-full" />
             </div>
-            <Skeleton className="mb-3 h-5 w-full" />
-            <Skeleton className="mb-3 h-5 w-3/4" />
+            <Skeleton className="mb-2 h-4 w-full" />
+            <Skeleton className="mb-4 h-4 w-2/3" />
             <div className="mb-3 flex gap-2">
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
               <Skeleton className="h-5 w-14 rounded-full" />
+              <Skeleton className="h-5 w-18 rounded-full" />
+              <Skeleton className="h-5 w-12 rounded-full" />
             </div>
-            <div className="flex gap-4">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-3 w-12" />
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-3 w-20" />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <Skeleton className="size-4 rounded-full" />
+                <Skeleton className="h-3 w-14" />
+              </div>
+              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-3 w-10" />
+              <Skeleton className="ml-auto h-3 w-16" />
             </div>
           </div>
         ))}
@@ -49,11 +55,11 @@ export function IssueList({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-destructive/10">
-          <span className="text-xl text-destructive">!</span>
+        <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-destructive/10 ring-1 ring-destructive/20">
+          <span className="text-xl font-bold text-destructive">!</span>
         </div>
-        <h3 className="mb-1 text-lg font-semibold">Something went wrong</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="mb-1.5 text-lg font-semibold">Something went wrong</h3>
+        <p className="max-w-xs text-sm text-muted-foreground">
           Failed to fetch issues. Check your search query or try again later.
         </p>
       </div>
@@ -63,10 +69,10 @@ export function IssueList({
   if (!issues || issues.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-          <span className="text-xl text-muted-foreground">?</span>
+        <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-muted ring-1 ring-border">
+          <span className="text-xl font-medium text-muted-foreground">?</span>
         </div>
-        <h3 className="mb-1 text-lg font-semibold">No issues found</h3>
+        <h3 className="mb-1.5 text-lg font-semibold">No issues found</h3>
         <p className="text-sm text-muted-foreground">
           Try adjusting your search or filters.
         </p>
@@ -76,12 +82,21 @@ export function IssueList({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Found {totalCount.toLocaleString()} issue{totalCount !== 1 ? "s" : ""}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Found {totalCount.toLocaleString()} issue
+          {totalCount !== 1 ? "s" : ""}
+        </p>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {issues.map((issue) => (
-          <IssueCard key={issue.id} issue={issue} />
+          <div
+            key={issue.id}
+            className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
+            style={{ animationDelay: `${issues.indexOf(issue) * 40}ms` }}
+          >
+            <IssueCard issue={issue} />
+          </div>
         ))}
       </div>
     </div>

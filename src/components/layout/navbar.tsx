@@ -23,8 +23,8 @@ export function Navbar({
   onMobileMenuOpen,
 }: NavbarProps) {
   return (
-    <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+    <header className="sticky top-0 z-10 border-b border-border/50 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -36,15 +36,17 @@ export function Navbar({
 
         <Link
           href="/"
-          className="flex items-center gap-2 whitespace-nowrap"
+          className="flex items-center gap-2.5 whitespace-nowrap"
         >
-          <GitBranch className="size-5" />
-          <span className="text-sm font-semibold hidden sm:inline">
+          <div className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-sm">
+            <GitBranch className="size-4 text-primary-foreground" />
+          </div>
+          <span className="text-sm font-semibold tracking-tight hidden sm:inline">
             Issue Finder
           </span>
         </Link>
 
-        <div className="flex-1">
+        <div className="flex-1 max-w-2xl mx-auto">
           <SearchBar
             value={keyword}
             onChange={onSearch}

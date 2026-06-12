@@ -21,44 +21,57 @@ export function Pagination({
   const pages = getPageNumbers(currentPage, totalPages)
 
   return (
-    <div className="flex items-center justify-center gap-1 pt-4">
+    <div className="flex items-center justify-center gap-1 pt-6">
       <Button
         variant="outline"
         size="sm"
         disabled={currentPage <= 1}
         onClick={() => onPageChange(currentPage - 1)}
+        className="gap-1"
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft className="size-3.5" />
+        <span className="hidden sm:inline">Prev</span>
       </Button>
 
-      {pages.map((page, i) =>
-        page === "..." ? (
-          <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">
-            ...
-          </span>
-        ) : (
-          <Button
-            key={page}
-            variant={currentPage === page ? "default" : "outline"}
-            size="sm"
-            className="min-w-8"
-            onClick={() => onPageChange(page as number)}
-          >
-            {page}
-          </Button>
-        )
-      )}
+      <div className="flex items-center gap-1">
+        {pages.map((page, i) =>
+          page === "..." ? (
+            <span
+              key={`ellipsis-${i}`}
+              className="flex size-8 items-center justify-center text-xs text-muted-foreground"
+            >
+              ...
+            </span>
+          ) : (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              size="sm"
+              className={`min-w-8 text-xs ${
+                currentPage === page
+                  ? "shadow-sm"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              }`}
+              onClick={() => onPageChange(page as number)}
+            >
+              {page}
+            </Button>
+          )
+        )}
+      </div>
 
       <Button
         variant="outline"
         size="sm"
         disabled={currentPage >= totalPages}
         onClick={() => onPageChange(currentPage + 1)}
+        className="gap-1"
       >
-        <ChevronRight className="size-4" />
+        <span className="hidden sm:inline">Next</span>
+        <ChevronRight className="size-3.5" />
       </Button>
 
-      <span className="ml-2 text-xs text-muted-foreground">
+      <span className="ml-3 text-xs text-muted-foreground/70">
         {totalCount.toLocaleString()} results
       </span>
     </div>
