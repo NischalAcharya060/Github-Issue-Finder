@@ -1,8 +1,10 @@
 "use client"
 
 import { Menu, GitBranch } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "@/components/search/search-bar"
+import { ThemeToggle } from "@/components/shared/theme-toggle"
 import type { SearchMode } from "@/lib/types"
 
 interface NavbarProps {
@@ -32,7 +34,7 @@ export function Navbar({
           <Menu className="size-4" />
         </Button>
 
-        <a
+        <Link
           href="/"
           className="flex items-center gap-2 whitespace-nowrap"
         >
@@ -40,7 +42,7 @@ export function Navbar({
           <span className="text-sm font-semibold hidden sm:inline">
             Issue Finder
           </span>
-        </a>
+        </Link>
 
         <div className="flex-1">
           <SearchBar
@@ -50,6 +52,7 @@ export function Navbar({
             onModeChange={onSearchModeChange}
           />
         </div>
+        <ThemeToggle />
       </div>
     </header>
   )

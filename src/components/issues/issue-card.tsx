@@ -1,6 +1,8 @@
 "use client"
 
+import { memo } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
 import { MessageSquare, Star, ExternalLink } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -43,7 +45,7 @@ interface IssueCardProps {
   issue: GitHubIssue
 }
 
-export function IssueCard({ issue }: IssueCardProps) {
+export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
   const repoFullName = getRepoFromUrl(issue.repository_url)
 
   return (
@@ -101,9 +103,11 @@ export function IssueCard({ issue }: IssueCardProps) {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           {issue.user && (
             <span className="flex items-center gap-1">
-              <img
+              <Image
                 src={issue.user.avatar_url}
                 alt={issue.user.login}
+                width={16}
+                height={16}
                 className="size-4 rounded-full"
               />
               {issue.user.login}
@@ -126,4 +130,4 @@ export function IssueCard({ issue }: IssueCardProps) {
       </CardContent>
     </Card>
   )
-}
+})

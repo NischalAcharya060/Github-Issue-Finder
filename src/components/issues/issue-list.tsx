@@ -21,17 +21,23 @@ export function IssueList({
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className="space-y-3 rounded-xl border p-4">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="h-3 w-full" />
-            <div className="flex gap-2">
+          <div key={i} className="rounded-xl border p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="size-1.5 rounded-full" />
+              <Skeleton className="h-3 w-10" />
+            </div>
+            <Skeleton className="mb-3 h-5 w-full" />
+            <Skeleton className="mb-3 h-5 w-3/4" />
+            <div className="mb-3 flex gap-2">
               <Skeleton className="h-5 w-16 rounded-full" />
               <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-5 w-14 rounded-full" />
             </div>
             <div className="flex gap-4">
+              <Skeleton className="h-3 w-16" />
               <Skeleton className="h-3 w-12" />
-              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-3 w-14" />
               <Skeleton className="h-3 w-20" />
             </div>
           </div>
@@ -43,7 +49,9 @@ export function IssueList({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 text-4xl">⚠️</div>
+        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-destructive/10">
+          <span className="text-xl text-destructive">!</span>
+        </div>
         <h3 className="mb-1 text-lg font-semibold">Something went wrong</h3>
         <p className="text-sm text-muted-foreground">
           Failed to fetch issues. Check your search query or try again later.
@@ -55,7 +63,9 @@ export function IssueList({
   if (!issues || issues.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 text-4xl">🔍</div>
+        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+          <span className="text-xl text-muted-foreground">?</span>
+        </div>
         <h3 className="mb-1 text-lg font-semibold">No issues found</h3>
         <p className="text-sm text-muted-foreground">
           Try adjusting your search or filters.

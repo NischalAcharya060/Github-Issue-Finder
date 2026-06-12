@@ -5,6 +5,7 @@ import { FilterPanel } from "@/components/search/filter-panel"
 import { SortDropdown } from "@/components/search/sort-dropdown"
 import { IssueList } from "@/components/issues/issue-list"
 import { Pagination } from "@/components/shared/pagination"
+import { Welcome } from "@/components/shared/welcome"
 import { Navbar } from "@/components/layout/navbar"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import {
@@ -66,11 +67,6 @@ export default function Home() {
     setPage(1)
   }, [])
 
-  const handleRecentSearch = useCallback((query: string) => {
-    setKeyword(query)
-    setPage(1)
-  }, [])
-
   const totalPages = data
     ? Math.min(Math.ceil(data.total_count / 30), 100)
     : 0
@@ -98,32 +94,38 @@ export default function Home() {
         </aside>
 
         <main className="flex-1 space-y-6">
-          <StatsCards data={data} isLoading={isLoading} />
+          {!keyword && !data ? (
+            <Welcome onSearch={handleSearch} />
+          ) : (
+            <>
+              <StatsCards data={data} isLoading={isLoading} />
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              {data && (
-                <span>
-                  {data.total_count.toLocaleString()} issues found
-                </span>
-              )}
-            </div>
-            <SortDropdown value={sort} onChange={setSort} />
-          </div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  {data && (
+                    <span>
+                      {data.total_count.toLocaleString()} issues found
+                    </span>
+                  )}
+                </div>
+                <SortDropdown value={sort} onChange={setSort} />
+              </div>
 
-          <IssueList
-            issues={data?.items}
-            isLoading={isLoading}
-            isError={isError}
-            totalCount={data?.total_count ?? 0}
-          />
+              <IssueList
+                issues={data?.items}
+                isLoading={isLoading}
+                isError={isError}
+                totalCount={data?.total_count ?? 0}
+              />
 
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            totalCount={data?.total_count ?? 0}
-            onPageChange={setPage}
-          />
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalCount={data?.total_count ?? 0}
+                onPageChange={setPage}
+              />
+            </>
+          )}
         </main>
       </div>
 

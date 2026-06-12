@@ -9,7 +9,7 @@ interface RecentSearchesProps {
 }
 
 export function RecentSearches({ onSelect }: RecentSearchesProps) {
-  const [searches, setSearches, clearSearches] = useLocalStorage<string[]>(
+  const [searches, , clearSearches] = useLocalStorage<string[]>(
     "recent-searches",
     []
   )
