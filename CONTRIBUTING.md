@@ -11,8 +11,8 @@ By participating, you agree to maintain a respectful and inclusive environment f
 ### 1. Fork & Clone
 
 ```bash
-git clone https://github.com/<your-username>/github-issue-finder.git
-cd github-issue-finder
+git clone https://github.com/NischalAcharya060/Github-Issue-Finder.git
+cd Github-Issue-Finder
 ```
 
 ### 2. Create a Branch
