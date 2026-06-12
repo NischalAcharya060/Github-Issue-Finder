@@ -30,7 +30,7 @@ export const SORT_OPTIONS = [
 ] as const
 
 export const ISSUE_STATES = [
-  { value: "", label: "All States" },
+  { value: "all", label: "All States" },
   { value: "open", label: "Open" },
   { value: "closed", label: "Closed" },
 ] as const

@@ -1,65 +1,111 @@
-import Image from "next/image";
+"use client"
+
+import { useState, useCallback } from "react"
+import { SearchBar } from "@/components/search/search-bar"
+import { FilterPanel } from "@/components/search/filter-panel"
+import { SortDropdown } from "@/components/search/sort-dropdown"
+import { IssueList } from "@/components/issues/issue-list"
+import { Pagination } from "@/components/shared/pagination"
+import { useGithubSearch } from "@/hooks/use-github-search"
+import type { SearchMode, FilterState, SortOption } from "@/lib/types"
+
+const defaultFilters: FilterState = {
+  language: "all",
+  labels: [],
+  state: "all",
+  createdYear: "all",
+  updatedYear: "all",
+  minStars: "",
+  maxStars: "",
+  beginnerFriendly: false,
+  goodFirstIssue: false,
+  helpWanted: false,
+}
 
 export default function Home() {
+  const [searchMode, setSearchMode] = useState<SearchMode>("keyword")
+  const [keyword, setKeyword] = useState("")
+  const [filters, setFilters] = useState<FilterState>(defaultFilters)
+  const [sort, setSort] = useState<SortOption>("created-desc")
+  const [page, setPage] = useState(1)
+
+  const { data, isLoading, isError } = useGithubSearch(
+    keyword,
+    searchMode,
+    filters,
+    sort,
+    page
+  )
+
+  const handleSearch = useCallback((value: string) => {
+    setKeyword(value)
+    setPage(1)
+  }, [])
+
+  const handleFiltersChange = useCallback((newFilters: FilterState) => {
+    setFilters(newFilters)
+    setPage(1)
+  }, [])
+
+  const totalPages = data
+    ? Math.min(Math.ceil(data.total_count / 30), 100)
+    : 0
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex min-h-dvh flex-col">
+      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+          <h1 className="text-lg font-semibold whitespace-nowrap">
+            Issue Finder
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+          <div className="flex-1">
+            <SearchBar
+              value={keyword}
+              onChange={handleSearch}
+              mode={searchMode}
+              onModeChange={setSearchMode}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
         </div>
-      </main>
+      </header>
+
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6">
+        <aside className="hidden w-64 shrink-0 lg:block">
+          <div className="sticky top-20 rounded-xl border p-4">
+            <FilterPanel
+              filters={filters}
+              onChange={handleFiltersChange}
+            />
+          </div>
+        </aside>
+
+        <main className="flex-1 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              {data && (
+                <span>
+                  {data.total_count.toLocaleString()} issues found
+                </span>
+              )}
+            </div>
+            <SortDropdown value={sort} onChange={setSort} />
+          </div>
+
+          <IssueList
+            issues={data?.items}
+            isLoading={isLoading}
+            isError={isError}
+            totalCount={data?.total_count ?? 0}
+          />
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalCount={data?.total_count ?? 0}
+            onPageChange={setPage}
+          />
+        </main>
+      </div>
     </div>
-  );
+  )
 }

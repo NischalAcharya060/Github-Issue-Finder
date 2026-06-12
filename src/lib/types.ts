@@ -85,7 +85,7 @@ export type SortOption =
 export interface FilterState {
   language: string
   labels: string[]
-  state: "" | "open" | "closed"
+  state: "all" | "open" | "closed"
   createdYear: string
   updatedYear: string
   minStars: string

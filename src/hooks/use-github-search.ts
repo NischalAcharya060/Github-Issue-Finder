@@ -32,21 +32,21 @@ function buildQuery(
     })
   }
 
-  if (filters.state) {
+  if (filters.state && filters.state !== "all") {
     parts.push(`state:${filters.state}`)
   }
 
-  if (filters.language) {
+  if (filters.language && filters.language !== "all") {
     parts.push(`language:${filters.language}`)
   }
 
-  if (filters.createdYear) {
+  if (filters.createdYear && filters.createdYear !== "all") {
     parts.push(
       `created:${filters.createdYear}-01-01..${filters.createdYear}-12-31`
     )
   }
 
-  if (filters.updatedYear) {
+  if (filters.updatedYear && filters.updatedYear !== "all") {
     parts.push(
       `updated:${filters.updatedYear}-01-01..${filters.updatedYear}-12-31`
     )
