@@ -104,21 +104,3 @@ src/
     ├── constants.ts            # Languages, sort options, years
     └── utils.ts                # cn() helper
 ```
-
-## Contributing
-
-Contributions are welcome! Here's how you can help:
-
-1. **Fork** the repository
-2. **Create a branch** — `git checkout -b feature/my-feature`
-3. **Commit your changes** — `git commit -m "Add my feature"`
-4. **Push** — `git push origin feature/my-feature`
-5. **Open a Pull Request**
-
-### Guidelines
-
-- Run `npm run lint` and `npm run build` before submitting
-- Keep PRs focused — one feature or fix per PR
-- Match existing code style and conventions
-- Update `docs/plan.md` if your change affects architecture
-
