@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitHub Issue Finder
+![Dashboard](public/img/dashboard.png)
+A modern SaaS-style tool to search and filter GitHub issues with powerful filters, sorting, and a clean dashboard UI.
+
+Built with **Next.js 16**, **TypeScript**, **Tailwind CSS v4**, **shadcn/ui**, and **TanStack Query**.
+
+![Example Search](public/img/example.png)
+
+## Features
+
+- **Search** — Search issues by keyword, repository, or organization
+- **Filters** — Language, labels, issue state, created/updated year, star range, beginner-friendly, good first issue, help wanted
+- **Sorting** — Most recent, most commented, most reactions, repository stars, least competition
+- **Dashboard** — Stats overview with per-metric accent colors
+- **Issue Cards** — Title, repo, language, labels, stars, date, comments, author, direct GitHub link
+- **Dark Mode** — System-aware with manual toggle
+- **Responsive** — Mobile sidebar via sheet, desktop sidebar, adaptive grid
+
+## Tech Stack
+
+| Layer | Choice |
+|-------|--------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| UI Library | shadcn/ui (Radix primitives) |
+| Icons | Lucide React |
+| HTTP | Axios |
+| Server State | TanStack Query |
+| Fonts | Inter + JetBrains Mono |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm / yarn / pnpm / bun
+
+### Installation
+
+```bash
+git clone https://github.com/<your-username>/github-issue-finder.git
+cd github-issue-finder
+npm install
+```
+
+### Environment Variables (Optional)
+
+Create a `.env.local` file in the project root:
+
+```env
+# GitHub personal access token — increases API rate limit from 60 to 5,000 req/hr
+# Generate at: https://github.com/settings/tokens (no scopes needed for public data)
+NEXT_PUBLIC_GITHUB_TOKEN=
+```
+
+Without a token, the app works but is limited to 60 requests per hour.
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run lint
+```
 
-## Learn More
+### Production
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── layout.tsx              # Root layout (fonts, providers, theme script)
+│   ├── page.tsx                # Main dashboard
+│   └── globals.css             # Tailwind + shadcn + theme variables
+├── components/
+│   ├── ui/                     # shadcn primitives
+│   ├── layout/                 # Navbar, Sidebar
+│   ├── issues/                 # IssueCard, IssueList
+│   ├── search/                 # SearchBar, FilterPanel, SortDropdown
+│   ├── dashboard/              # StatsCards, RecentSearches
+│   ├── shared/                 # Pagination, ThemeToggle, Welcome
+│   └── providers/              # TanStack Query provider
+├── hooks/
+│   ├── use-github-search.ts    # TanStack Query hook for GitHub API
+│   ├── use-debounce.ts
+│   ├── use-local-storage.ts
+│   └── use-theme.ts
+└── lib/
+    ├── github-api.ts           # Axios instance + API functions
+    ├── types.ts                # TypeScript interfaces
+    ├── constants.ts            # Languages, sort options, years
+    └── utils.ts                # cn() helper
+```
 
-## Deploy on Vercel
+## Contributing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Contributions are welcome! Here's how you can help:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Fork** the repository
+2. **Create a branch** — `git checkout -b feature/my-feature`
+3. **Commit your changes** — `git commit -m "Add my feature"`
+4. **Push** — `git push origin feature/my-feature`
+5. **Open a Pull Request**
+
+### Guidelines
+
+- Run `npm run lint` and `npm run build` before submitting
+- Keep PRs focused — one feature or fix per PR
+- Match existing code style and conventions
+- Update `docs/plan.md` if your change affects architecture
+
