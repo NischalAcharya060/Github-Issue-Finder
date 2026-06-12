@@ -19,6 +19,7 @@ export interface GitHubRepo {
   html_url: string
   description: string | null
   stargazers_count: number
+  forks_count: number
   language: string | null
   owner: GitHubUser
 }

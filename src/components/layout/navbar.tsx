@@ -1,25 +1,31 @@
 "use client"
 
-import { Menu, GitBranch } from "lucide-react"
+import { Menu, GitBranch, Search, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "@/components/search/search-bar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
-import type { SearchMode } from "@/lib/types"
+import type { SearchMode, EntityType } from "@/lib/types"
 
 interface NavbarProps {
   keyword: string
   onSearch: (value: string) => void
+  onSubmit?: (value: string) => void
   searchMode: SearchMode
+  entityType: EntityType
   onSearchModeChange: (mode: SearchMode) => void
+  onEntityTypeChange: (type: EntityType) => void
   onMobileMenuOpen: () => void
 }
 
 export function Navbar({
   keyword,
   onSearch,
+  onSubmit,
   searchMode,
+  entityType,
   onSearchModeChange,
+  onEntityTypeChange,
   onMobileMenuOpen,
 }: NavbarProps) {
   return (
@@ -46,10 +52,36 @@ export function Navbar({
           </span>
         </Link>
 
+        <div className="flex items-center gap-1.5 rounded-lg bg-secondary/50 p-0.5">
+          <Button
+            variant={entityType === "issues" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onEntityTypeChange("issues")}
+            className={`h-7 gap-1 px-2 text-[11px] ${
+              entityType === "issues" ? "shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Search className="size-3" />
+            <span className="hidden sm:inline">Issues</span>
+          </Button>
+          <Button
+            variant={entityType === "repositories" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onEntityTypeChange("repositories")}
+            className={`h-7 gap-1 px-2 text-[11px] ${
+              entityType === "repositories" ? "shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BookOpen className="size-3" />
+            <span className="hidden sm:inline">Repos</span>
+          </Button>
+        </div>
+
         <div className="flex-1 max-w-2xl mx-auto">
           <SearchBar
             value={keyword}
             onChange={onSearch}
+            onSubmit={onSubmit}
             mode={searchMode}
             onModeChange={onSearchModeChange}
           />

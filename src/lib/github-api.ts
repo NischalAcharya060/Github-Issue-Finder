@@ -3,6 +3,7 @@ import type {
   SearchResponse,
   RepoSearchResponse,
   SearchParams,
+  GitHubRepo,
 } from "./types"
 
 const githubApi = axios.create({
@@ -43,8 +44,8 @@ export async function getOrganizationRepos(
   org: string,
   page = 1,
   perPage = 30
-) {
-  const { data } = await githubApi.get(`/orgs/${org}/repos`, {
+): Promise<GitHubRepo[]> {
+  const { data } = await githubApi.get<GitHubRepo[]>(`/orgs/${org}/repos`, {
     params: { page, per_page: perPage, sort: "updated" },
   })
   return data

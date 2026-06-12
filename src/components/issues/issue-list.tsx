@@ -9,6 +9,7 @@ interface IssueListProps {
   isLoading: boolean
   isError: boolean
   totalCount: number
+  onIssueClick?: (id: number) => void
 }
 
 export function IssueList({
@@ -16,6 +17,7 @@ export function IssueList({
   isLoading,
   isError,
   totalCount,
+  onIssueClick,
 }: IssueListProps) {
   if (isLoading) {
     return (
@@ -92,8 +94,9 @@ export function IssueList({
         {issues.map((issue) => (
           <div
             key={issue.id}
-            className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
+            className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both cursor-pointer"
             style={{ animationDelay: `${issues.indexOf(issue) * 40}ms` }}
+            onClick={() => onIssueClick?.(issue.id)}
           >
             <IssueCard issue={issue} />
           </div>

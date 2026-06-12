@@ -2,6 +2,7 @@
 
 import { FilterPanel } from "@/components/search/filter-panel"
 import { RecentSearches } from "@/components/dashboard/recent-searches"
+import { SavedSearches } from "@/components/dashboard/saved-searches"
 import type { FilterState } from "@/lib/types"
 
 interface SidebarProps {
@@ -19,6 +20,9 @@ export function Sidebar({
     <div className="sticky top-20 space-y-4">
       <div className="rounded-xl border p-4">
         <FilterPanel filters={filters} onChange={onFiltersChange} />
+      </div>
+      <div className="rounded-xl border p-4">
+        <SavedSearches onSelect={onSelectRecentSearch} />
       </div>
       <div className="rounded-xl border p-4">
         <RecentSearches onSelect={onSelectRecentSearch} />

@@ -15,18 +15,27 @@ const modeIcons: Record<SearchMode, typeof Hash> = {
 interface SearchBarProps {
   value: string
   onChange: (value: string) => void
+  onSubmit?: (value: string) => void
   mode: SearchMode
   onModeChange: (mode: SearchMode) => void
 }
 
-export function SearchBar({ value, onChange, mode, onModeChange }: SearchBarProps) {
+export function SearchBar({ value, onChange, onSubmit, mode, onModeChange }: SearchBarProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && onSubmit) {
+      onSubmit(value)
+    }
+  }
+
   return (
     <div className="flex gap-1.5">
       <div className="relative flex-1">
         <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
         <Input
+          id="search-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder={
             mode === "keyword"
               ? "Search issues by keyword..."

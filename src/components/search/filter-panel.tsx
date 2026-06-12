@@ -1,6 +1,7 @@
 "use client"
 
-import { Filter, RotateCcw, SlidersHorizontal, Tags, Calendar, Star } from "lucide-react"
+import { useState } from "react"
+import { Filter, RotateCcw, SlidersHorizontal, Tags, Calendar, Star, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import { LANGUAGES, ISSUE_STATES, YEARS } from "@/lib/constants"
 import type { FilterState } from "@/lib/types"
 
@@ -54,8 +56,22 @@ function FilterSection({
 }
 
 export function FilterPanel({ filters, onChange }: FilterPanelProps) {
+  const [customLabel, setCustomLabel] = useState("")
+
   const update = (partial: Partial<FilterState>) => {
     onChange({ ...filters, ...partial })
+  }
+
+  const addLabel = () => {
+    const label = customLabel.trim()
+    if (label && !filters.labels.includes(label)) {
+      update({ labels: [...filters.labels, label] })
+    }
+    setCustomLabel("")
+  }
+
+  const removeLabel = (label: string) => {
+    update({ labels: filters.labels.filter((l) => l !== label) })
   }
 
   const hasActiveFilters =
@@ -185,6 +201,44 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
 
         <FilterSection icon={Tags} title="Labels">
           <div className="space-y-2 pt-4">
+            <div className="flex items-center gap-2">
+              <Input
+                value={customLabel}
+                onChange={(e) => setCustomLabel(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addLabel()}
+                placeholder="Add custom label..."
+                className="h-7 text-xs flex-1"
+              />
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={addLabel}
+                disabled={!customLabel.trim()}
+              >
+                <Plus className="size-3" />
+              </Button>
+            </div>
+
+            {filters.labels.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {filters.labels.map((label) => (
+                  <Badge
+                    key={label}
+                    variant="outline"
+                    className="gap-1 pr-1 text-[10px]"
+                  >
+                    {label}
+                    <button
+                      onClick={() => removeLabel(label)}
+                      className="hover:text-destructive"
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
             {(
               [
                 ["beginner", "Beginner friendly", filters.beginnerFriendly],
