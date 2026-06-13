@@ -1,6 +1,15 @@
 "use client"
 
-import { GitBranch, Search, SlidersHorizontal, Sparkles, GitFork, Code2 } from "lucide-react"
+import { motion, useReducedMotion } from "framer-motion"
+import {
+  GitBranch,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  GitFork,
+  Code2,
+} from "lucide-react"
+import { FadeInUp, Stagger, StaggerItem } from "@/components/motion/motion-primitives"
 
 const suggestions = [
   { label: "good first issue", query: "good first issue" },
@@ -25,99 +34,150 @@ const popularOrgs = [
   { label: "google", query: "org:google" },
 ]
 
+const features = [
+  {
+    icon: Search,
+    title: "Search anything",
+    caption: "Query issues by keyword, repository, or organization in seconds.",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Powerful filters",
+    caption: "Narrow by language, labels, stars, and date to find the perfect fit.",
+  },
+  {
+    icon: Sparkles,
+    title: "Hidden gems",
+    caption: "Surface beginner-friendly and high-impact opportunities to contribute.",
+  },
+]
+
 interface WelcomeProps {
   onSearch: (query: string) => void
 }
 
-export function Welcome({ onSearch }: WelcomeProps) {
+function ChipGroup({
+  title,
+  items,
+  icon: Icon,
+  onSearch,
+}: {
+  title: string
+  items: { label: string; query: string }[]
+  icon: typeof Search
+  onSearch: (query: string) => void
+}) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="relative mb-8">
-        <div className="absolute inset-0 animate-pulse rounded-full bg-primary/10 blur-xl" />
-        <div className="relative flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20 ring-1 ring-white/10">
-          <GitBranch className="size-8 text-primary-foreground" />
-        </div>
+    <div>
+      <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+        {title}
       </div>
+      <Stagger
+        stagger={0.04}
+        className="flex flex-wrap justify-center gap-2"
+      >
+        {items.map((item) => (
+          <StaggerItem key={item.query}>
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              onClick={() => onSearch(item.query)}
+              className="group inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/60 px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:border-primary/40 hover:bg-primary/8 hover:text-primary"
+            >
+              <Icon className="size-3 transition-transform group-hover:scale-110" />
+              {item.label}
+            </motion.button>
+          </StaggerItem>
+        ))}
+      </Stagger>
+    </div>
+  )
+}
 
-      <h2 className="mb-3 text-3xl font-semibold tracking-tight">
-        Find GitHub Issues
-      </h2>
+export function Welcome({ onSearch }: WelcomeProps) {
+  const reduce = useReducedMotion()
 
-      <p className="mb-8 max-w-md text-sm leading-relaxed text-muted-foreground">
-        Search millions of GitHub issues across repositories.
-        Use the search bar above or try one of these quick searches:
-      </p>
-
-      <div className="space-y-6">
-        <div>
-          <div className="mb-2 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">Quick Suggestions</div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {suggestions.map((s) => (
-              <button
-                key={s.query}
-                onClick={() => onSearch(s.query)}
-                className="group inline-flex items-center gap-1.5 rounded-full border bg-background px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md hover:shadow-primary/5"
-              >
-                <Search className="size-3 transition-transform group-hover:scale-110" />
-                {s.label}
-              </button>
-            ))}
-          </div>
+  return (
+    <div className="flex flex-col items-center justify-center px-2 py-12 text-center sm:py-16">
+      {/* Hero mark */}
+      <FadeInUp className="relative mb-8">
+        <motion.div
+          aria-hidden
+          className="absolute inset-0 rounded-full bg-primary/20 blur-2xl"
+          animate={reduce ? undefined : { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <div className="relative flex size-18 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-primary/55 shadow-xl shadow-primary/25 ring-1 ring-white/15">
+          <GitBranch className="size-9 text-primary-foreground" />
         </div>
+      </FadeInUp>
 
-        <div>
-          <div className="mb-2 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">Top Languages</div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {quickLanguages.map((l) => (
-              <button
-                key={l.query}
-                onClick={() => onSearch(l.query)}
-                className="group inline-flex items-center gap-1.5 rounded-full border bg-background px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md"
-              >
-                <Code2 className="size-3 transition-transform group-hover:scale-110" />
-                {l.label}
-              </button>
-            ))}
-          </div>
+      <FadeInUp delay={0.08}>
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/60 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-sm">
+          <Sparkles className="size-3 text-primary" />
+          Explore millions of open-source issues
         </div>
+      </FadeInUp>
 
-        <div>
-          <div className="mb-2 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">Popular Organizations</div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {popularOrgs.map((o) => (
-              <button
-                key={o.query}
-                onClick={() => onSearch(o.query)}
-                className="group inline-flex items-center gap-1.5 rounded-full border bg-background px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md"
-              >
-                <GitFork className="size-3 transition-transform group-hover:scale-110" />
-                {o.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <FadeInUp delay={0.14}>
+        <h1 className="mb-4 max-w-2xl text-balance text-4xl font-bold tracking-tight sm:text-5xl">
+          Find issues worth{" "}
+          <span className="text-gradient">contributing to</span>
+        </h1>
+      </FadeInUp>
 
-      <div className="mt-12 flex items-center gap-8 text-xs text-muted-foreground/80">
-        <span className="flex items-center gap-2">
-          <span className="flex size-6 items-center justify-center rounded-md bg-primary/5 ring-1 ring-primary/10">
-            <Search className="size-3 text-primary" />
-          </span>
-          Search by keyword, repo, or org
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="flex size-6 items-center justify-center rounded-md bg-primary/5 ring-1 ring-primary/10">
-            <SlidersHorizontal className="size-3 text-primary" />
-          </span>
-          Filter by language, labels, stars
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="flex size-6 items-center justify-center rounded-md bg-primary/5 ring-1 ring-primary/10">
-            <Sparkles className="size-3 text-primary" />
-          </span>
-          Uncover hidden opportunities
-        </span>
-      </div>
+      <FadeInUp delay={0.2}>
+        <p className="mb-10 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Search across every public repository on GitHub. Use the search bar
+          above, or jump in with one of these:
+        </p>
+      </FadeInUp>
+
+      <FadeInUp delay={0.26} className="w-full max-w-2xl space-y-7">
+        <ChipGroup
+          title="Quick suggestions"
+          items={suggestions}
+          icon={Search}
+          onSearch={onSearch}
+        />
+        <ChipGroup
+          title="Top languages"
+          items={quickLanguages}
+          icon={Code2}
+          onSearch={onSearch}
+        />
+        <ChipGroup
+          title="Popular organizations"
+          items={popularOrgs}
+          icon={GitFork}
+          onSearch={onSearch}
+        />
+      </FadeInUp>
+
+      {/* Feature cards */}
+      <FadeInUp
+        delay={0.34}
+        className="mt-14 grid w-full max-w-3xl gap-4 sm:grid-cols-3"
+      >
+        {features.map((f) => {
+          const Icon = f.icon
+          return (
+            <div
+              key={f.title}
+              className="rounded-2xl border border-border/70 bg-card/60 p-5 text-left shadow-sm backdrop-blur-sm transition-colors hover:border-primary/30"
+            >
+              <div className="mb-3 flex size-9 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+                <Icon className="size-4.5 text-primary" />
+              </div>
+              <div className="mb-1 text-sm font-semibold">{f.title}</div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {f.caption}
+              </p>
+            </div>
+          )
+        })}
+      </FadeInUp>
     </div>
   )
 }

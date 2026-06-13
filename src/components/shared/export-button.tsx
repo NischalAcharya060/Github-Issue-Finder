@@ -1,6 +1,7 @@
 "use client"
 
 import { Download } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { SearchResponse } from "@/lib/types"
 
 interface ExportButtonProps {
@@ -47,13 +48,15 @@ export function ExportButton({ data, filename }: ExportButtonProps) {
   }
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={handleExport}
-      className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
       title="Export as CSV"
+      className="gap-1.5 text-muted-foreground"
     >
       <Download className="size-3.5" />
-      Export CSV
-    </button>
+      <span className="hidden sm:inline">Export</span>
+    </Button>
   )
 }

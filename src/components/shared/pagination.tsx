@@ -21,7 +21,7 @@ export function Pagination({
   const pages = getPageNumbers(currentPage, totalPages)
 
   return (
-    <div className="flex items-center justify-center gap-1 pt-6">
+    <div className="flex flex-wrap items-center justify-center gap-1.5 pt-8">
       <Button
         variant="outline"
         size="sm"
@@ -40,19 +40,20 @@ export function Pagination({
               key={`ellipsis-${i}`}
               className="flex size-8 items-center justify-center text-xs text-muted-foreground"
             >
-              ...
+              …
             </span>
           ) : (
             <Button
               key={page}
-              variant={currentPage === page ? "default" : "outline"}
+              variant={currentPage === page ? "default" : "ghost"}
               size="sm"
-              className={`min-w-8 text-xs ${
+              className={`min-w-8 text-xs tabular-nums ${
                 currentPage === page
-                  ? "shadow-sm"
-                  : "hover:bg-accent hover:text-accent-foreground"
+                  ? ""
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
               onClick={() => onPageChange(page as number)}
+              aria-current={currentPage === page ? "page" : undefined}
             >
               {page}
             </Button>
@@ -71,7 +72,7 @@ export function Pagination({
         <ChevronRight className="size-3.5" />
       </Button>
 
-      <span className="ml-3 text-xs text-muted-foreground/70">
+      <span className="ml-2 hidden text-xs text-muted-foreground/70 tabular-nums sm:inline">
         {totalCount.toLocaleString()} results
       </span>
     </div>

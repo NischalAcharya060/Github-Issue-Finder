@@ -12,6 +12,8 @@ import { StatsCards } from "@/components/dashboard/stats-cards"
 import { RepoList } from "@/components/repos/repo-list"
 import { IssueDetailModal } from "@/components/issues/issue-detail-modal"
 import { ExportButton } from "@/components/shared/export-button"
+import { Button } from "@/components/ui/button"
+import { Bookmark } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -144,33 +146,38 @@ export default function Home() {
                 <StatsCards data={data as SearchResponse | undefined} isLoading={isLoading} />
               )}
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="text-sm text-muted-foreground">
-                    {data && (
-                      <span>
-                        {(data as SearchResponse | RepoSearchResponse).total_count.toLocaleString()} results found
-                      </span>
-                    )}
-                  </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card/60 px-4 py-2.5 shadow-sm shadow-foreground/[0.03] backdrop-blur-sm">
+                <div className="flex items-center gap-3 text-sm">
+                  {data ? (
+                    <span className="text-muted-foreground">
+                      <span className="font-semibold text-foreground tabular-nums">
+                        {(data as SearchResponse | RepoSearchResponse).total_count.toLocaleString()}
+                      </span>{" "}
+                      results
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Searching…</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
                   {keyword && entityType === "issues" && (
                     <ExportButton
                       data={data as SearchResponse | undefined}
                       filename={`github-issues-${keyword.replace(/\s+/g, "-")}`}
                     />
                   )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleSaveSearch}
-                    className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                    title="Save this search"
-                  >
-                    <svg className="size-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                    </svg>
-                    Save
-                  </button>
+                  {keyword && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveSearch}
+                      title="Save this search"
+                      className="gap-1.5 text-muted-foreground"
+                    >
+                      <Bookmark className="size-3.5" />
+                      <span className="hidden sm:inline">Save</span>
+                    </Button>
+                  )}
                   <SortDropdown value={sort} onChange={setSort} />
                 </div>
               </div>

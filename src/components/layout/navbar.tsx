@@ -1,11 +1,19 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Menu, GitBranch, Search, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "@/components/search/search-bar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
+import { SegmentedControl } from "@/components/shared/segmented-control"
+import { cn } from "@/lib/utils"
 import type { SearchMode, EntityType } from "@/lib/types"
+
+const entityOptions: { value: EntityType; label: string; icon: typeof Search }[] = [
+  { value: "issues", label: "Issues", icon: Search },
+  { value: "repositories", label: "Repos", icon: BookOpen },
+]
 
 interface NavbarProps {
   keyword: string
@@ -28,56 +36,55 @@ export function Navbar({
   onEntityTypeChange,
   onMobileMenuOpen,
 }: NavbarProps) {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-10 border-b border-border/50 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
+    <header
+      className={cn(
+        "glass sticky top-0 z-30 border-b transition-all duration-300",
+        scrolled
+          ? "border-border/60 shadow-sm shadow-foreground/[0.03]"
+          : "border-transparent"
+      )}
+    >
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
         <Button
           variant="ghost"
           size="icon-sm"
           className="shrink-0 lg:hidden"
           onClick={onMobileMenuOpen}
+          aria-label="Open filters"
         >
           <Menu className="size-4" />
         </Button>
 
         <Link
           href="/"
-          className="flex items-center gap-2.5 whitespace-nowrap"
+          className="group flex items-center gap-2.5 whitespace-nowrap"
         >
-          <div className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-sm">
+          <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/55 shadow-sm shadow-primary/30 ring-1 ring-white/10 transition-transform group-hover:scale-105">
             <GitBranch className="size-4 text-primary-foreground" />
           </div>
-          <span className="text-sm font-semibold tracking-tight hidden sm:inline">
+          <span className="text-gradient hidden text-base font-bold tracking-tight sm:inline">
             Issue Finder
           </span>
         </Link>
 
-        <div className="flex items-center gap-1.5 rounded-lg bg-secondary/50 p-0.5">
-          <Button
-            variant={entityType === "issues" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => onEntityTypeChange("issues")}
-            className={`h-7 gap-1 px-2 text-[11px] ${
-              entityType === "issues" ? "shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Search className="size-3" />
-            <span className="hidden sm:inline">Issues</span>
-          </Button>
-          <Button
-            variant={entityType === "repositories" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => onEntityTypeChange("repositories")}
-            className={`h-7 gap-1 px-2 text-[11px] ${
-              entityType === "repositories" ? "shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <BookOpen className="size-3" />
-            <span className="hidden sm:inline">Repos</span>
-          </Button>
-        </div>
+        <SegmentedControl
+          options={entityOptions}
+          value={entityType}
+          onChange={onEntityTypeChange}
+          layoutGroup="entity-type"
+        />
 
-        <div className="flex-1 max-w-2xl mx-auto">
+        <div className="mx-auto max-w-2xl flex-1">
           <SearchBar
             value={keyword}
             onChange={onSearch}
@@ -86,7 +93,10 @@ export function Navbar({
             onModeChange={onSearchModeChange}
           />
         </div>
-        <ThemeToggle />
+
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   )

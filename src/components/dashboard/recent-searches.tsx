@@ -17,8 +17,10 @@ export function RecentSearches({ onSelect }: RecentSearchesProps) {
   if (searches.length === 0) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Clock className="size-4" />
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <div className="flex size-6 items-center justify-center rounded-lg bg-muted ring-1 ring-border/70">
+            <Clock className="size-3.5 text-muted-foreground" />
+          </div>
           Recent Searches
         </div>
         <p className="text-xs text-muted-foreground">
@@ -31,8 +33,10 @@ export function RecentSearches({ onSelect }: RecentSearchesProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Clock className="size-4" />
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <div className="flex size-6 items-center justify-center rounded-lg bg-muted ring-1 ring-border/70">
+            <Clock className="size-3.5 text-muted-foreground" />
+          </div>
           Recent Searches
         </div>
         <Button

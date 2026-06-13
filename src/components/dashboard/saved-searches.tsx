@@ -18,8 +18,10 @@ export function SavedSearches({ onSelect }: SavedSearchesProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Bookmark className="size-4" />
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/15">
+            <Bookmark className="size-3.5 text-primary" />
+          </div>
           Saved Searches
         </div>
         <Button

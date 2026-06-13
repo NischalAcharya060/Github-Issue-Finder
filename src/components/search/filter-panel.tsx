@@ -77,12 +77,31 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
   const hasActiveFilters =
     JSON.stringify(filters) !== JSON.stringify(defaultFilters)
 
+  const activeCount =
+    (filters.language !== "all" ? 1 : 0) +
+    (filters.state !== "all" ? 1 : 0) +
+    (filters.createdYear !== "all" ? 1 : 0) +
+    (filters.updatedYear !== "all" ? 1 : 0) +
+    (filters.minStars ? 1 : 0) +
+    (filters.maxStars ? 1 : 0) +
+    filters.labels.length +
+    (filters.beginnerFriendly ? 1 : 0) +
+    (filters.goodFirstIssue ? 1 : 0) +
+    (filters.helpWanted ? 1 : 0)
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
-          <Filter className="size-4" />
+          <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/15">
+            <Filter className="size-3.5 text-primary" />
+          </div>
           Filters
+          {activeCount > 0 && (
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground tabular-nums">
+              {activeCount}
+            </span>
+          )}
         </div>
         {hasActiveFilters && (
           <Button

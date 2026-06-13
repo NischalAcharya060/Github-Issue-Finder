@@ -3,14 +3,14 @@
 import React from "react"
 import { Search, BookOpen, Building2, Hash } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { SegmentedControl } from "@/components/shared/segmented-control"
 import type { SearchMode } from "@/lib/types"
 
-const modeIcons: Record<SearchMode, typeof Hash> = {
-  keyword: Hash,
-  repo: BookOpen,
-  org: Building2,
-}
+const modeOptions: { value: SearchMode; label: string; icon: typeof Hash }[] = [
+  { value: "keyword", label: "Keyword", icon: Hash },
+  { value: "repo", label: "Repo", icon: BookOpen },
+  { value: "org", label: "Org", icon: Building2 },
+]
 
 interface SearchBarProps {
   value: string
@@ -20,7 +20,13 @@ interface SearchBarProps {
   onModeChange: (mode: SearchMode) => void
 }
 
-export function SearchBar({ value, onChange, onSubmit, mode, onModeChange }: SearchBarProps) {
+export function SearchBar({
+  value,
+  onChange,
+  onSubmit,
+  mode,
+  onModeChange,
+}: SearchBarProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && onSubmit) {
       onSubmit(value)
@@ -28,9 +34,9 @@ export function SearchBar({ value, onChange, onSubmit, mode, onModeChange }: Sea
   }
 
   return (
-    <div className="flex gap-1.5">
-      <div className="relative flex-1">
-        <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+    <div className="flex items-center gap-2">
+      <div className="group relative flex-1">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
         <Input
           id="search-input"
           value={value}
@@ -38,37 +44,24 @@ export function SearchBar({ value, onChange, onSubmit, mode, onModeChange }: Sea
           onKeyDown={handleKeyDown}
           placeholder={
             mode === "keyword"
-              ? "Search issues by keyword..."
+              ? "Search issues by keyword…"
               : mode === "repo"
-                ? "Search by repository (e.g. owner/repo)..."
-                : "Search by organization (e.g. vercel)..."
+                ? "Search by repository (e.g. owner/repo)…"
+                : "Search by organization (e.g. vercel)…"
           }
-          className="h-8 pl-8 text-xs bg-secondary/50 border-secondary hover:border-border focus:bg-background transition-colors"
+          className="h-9 rounded-xl border-transparent bg-secondary/60 pr-16 pl-9 text-sm shadow-sm ring-1 ring-border/60 transition-all hover:ring-border focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/40"
         />
+        <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-md border border-border/70 bg-background/70 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground/70 sm:inline-flex">
+          ⌘K
+        </kbd>
       </div>
-      <div className="flex gap-0.5 rounded-lg bg-secondary/50 p-0.5">
-        {(["keyword", "repo", "org"] as const).map((m) => {
-          const Icon = modeIcons[m]
-          return (
-            <Button
-              key={m}
-              variant={mode === m ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onModeChange(m)}
-              className={`h-7 gap-1 px-2 text-[11px] ${
-                mode === m
-                  ? "shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Icon className="size-3" />
-              <span className="hidden sm:inline">
-                {m.charAt(0).toUpperCase() + m.slice(1)}
-              </span>
-            </Button>
-          )
-        })}
-      </div>
+      <SegmentedControl
+        options={modeOptions}
+        value={mode}
+        onChange={onModeChange}
+        layoutGroup="search-mode"
+        className="hidden md:inline-flex"
+      />
     </div>
   )
 }

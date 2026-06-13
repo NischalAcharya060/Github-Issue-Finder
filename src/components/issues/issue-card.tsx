@@ -14,9 +14,9 @@ function getRepoFromUrl(url: string): string {
 }
 
 const labelStyles: Record<string, string> = {
-  bug: "bg-red-500/12 text-red-600 dark:text-red-400 border-red-500/25 shadow-[inset_0_0_0_1px_oklch(0.577_0.245_27.325/0.15)] dark:shadow-[inset_0_0_0_1px_oklch(0.704_0.191_22.216/0.15)]",
+  bug: "bg-red-500/12 text-red-600 dark:text-red-400 border-red-500/25",
   enhancement:
-    "bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25 shadow-[inset_0_0_0_1px_oklch(0.546_0.245_262.881/0.15)] dark:shadow-[inset_0_0_0_1px_oklch(0.623_0.214_259.815/0.15)]",
+    "bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25",
   documentation:
     "bg-purple-500/12 text-purple-600 dark:text-purple-400 border-purple-500/25",
   "good first issue":
@@ -41,31 +41,35 @@ interface IssueCardProps {
 
 export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
   const repoFullName = getRepoFromUrl(issue.repository_url)
+  const isOpen = issue.state === "open"
 
   return (
-    <div className="group relative">
-      <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-primary/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <div className="relative rounded-xl border bg-card p-4 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-primary/5">
-        <div className="mb-2.5 flex items-start justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 rounded-md bg-secondary/50 px-1.5 py-0.5 font-medium text-secondary-foreground">
-              <GitPullRequest className="size-3" />
-              <span className="truncate max-w-[140px]">{repoFullName}</span>
-            </div>
+    <div className="group relative h-full">
+      <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="relative flex h-full flex-col rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/8">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 text-xs font-medium text-secondary-foreground">
+              <GitPullRequest className="size-3 shrink-0 text-muted-foreground" />
+              <span className="max-w-[150px] truncate">{repoFullName}</span>
+            </span>
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                issue.state === "open"
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                isOpen
                   ? "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400"
                   : "bg-muted text-muted-foreground"
               }`}
             >
-              <span
-                className={`size-1.5 rounded-full ${
-                  issue.state === "open"
-                    ? "bg-emerald-500"
-                    : "bg-muted-foreground"
-                }`}
-              />
+              <span className="relative flex size-1.5">
+                {isOpen && (
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                )}
+                <span
+                  className={`relative inline-flex size-1.5 rounded-full ${
+                    isOpen ? "bg-emerald-500" : "bg-muted-foreground"
+                  }`}
+                />
+              </span>
               {issue.state}
             </span>
           </div>
@@ -73,12 +77,14 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
             variant="ghost"
             size="icon-xs"
             asChild
-            className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+            className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
           >
             <Link
               href={issue.html_url}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              aria-label="Open on GitHub"
             >
               <ExternalLink />
             </Link>
@@ -89,34 +95,47 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
           href={issue.html_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mb-3 block text-sm font-medium leading-snug text-card-foreground transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+          className="mb-3 block text-sm font-semibold leading-snug text-card-foreground transition-colors group-hover:text-primary"
         >
           {issue.title}
         </Link>
 
-        <div className="mb-3 flex min-h-5 flex-wrap gap-1">
-          {issue.labels.slice(0, 5).map((label) => (
-            <Badge
-              key={label.id}
-              variant="outline"
-              className={`border px-1.5 py-0 text-[10px] font-normal ${getLabelClassName(label.name, label.color)}`}
-            >
-              {label.name}
-            </Badge>
-          ))}
-        </div>
+        {issue.labels.length > 0 && (
+          <div className="mb-4 flex min-h-5 flex-wrap gap-1">
+            {issue.labels.slice(0, 4).map((label) => (
+              <Badge
+                key={label.id}
+                variant="outline"
+                className={`border px-1.5 py-0 text-[10px] font-normal ${getLabelClassName(label.name, label.color)}`}
+              >
+                {label.name}
+              </Badge>
+            ))}
+            {issue.labels.length > 4 && (
+              <Badge
+                variant="outline"
+                className="border-border/70 px-1.5 py-0 text-[10px] font-normal text-muted-foreground"
+              >
+                +{issue.labels.length - 4}
+              </Badge>
+            )}
+          </div>
+        )}
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border/50 pt-3 text-[11px] text-muted-foreground">
           {issue.user && (
             <span className="flex items-center gap-1.5">
               <Image
                 src={issue.user.avatar_url}
                 alt={issue.user.login}
-                width={16}
-                height={16}
-                className="size-4 rounded-full ring-1 ring-border"
+                width={18}
+                height={18}
+                className="size-4.5 rounded-full ring-1 ring-border"
               />
-              <span className="max-w-[80px] truncate">{issue.user.login}</span>
+              <span className="max-w-[80px] truncate font-medium">
+                {issue.user.login}
+              </span>
             </span>
           )}
           <span className="flex items-center gap-1">

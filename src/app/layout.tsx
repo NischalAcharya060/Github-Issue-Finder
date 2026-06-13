@@ -14,8 +14,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GitHub Issue Finder",
-  description: "Find GitHub issues with powerful filters and search",
+  title: "Issue Finder — Discover GitHub issues worth contributing to",
+  description:
+    "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
+  keywords: [
+    "github issues",
+    "good first issue",
+    "open source",
+    "help wanted",
+    "contribute",
+  ],
+  openGraph: {
+    title: "Issue Finder — Discover GitHub issues worth contributing to",
+    description:
+      "Search millions of GitHub issues and repositories with powerful filters.",
+    type: "website",
+  },
 };
 
 const themeScript = `
@@ -41,7 +55,11 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="relative min-h-full flex flex-col">
+        <div
+          aria-hidden
+          className="bg-aurora pointer-events-none fixed inset-0 -z-10"
+        />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-primary"
