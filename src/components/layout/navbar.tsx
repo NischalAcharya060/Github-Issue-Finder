@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "@/components/search/search-bar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
+import { InstallButton } from "@/components/shared/install-button"
 import { SegmentedControl } from "@/components/shared/segmented-control"
 import { cn } from "@/lib/utils"
 import type { SearchMode, EntityType } from "@/lib/types"
@@ -94,7 +95,8 @@ export function Navbar({
           />
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <InstallButton />
           <ThemeToggle />
         </div>
       </div>

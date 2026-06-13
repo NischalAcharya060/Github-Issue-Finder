@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/providers";
+import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -14,9 +15,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://issue-finder.acharyanischal.com.np"),
   title: "Issue Finder — Discover GitHub issues worth contributing to",
   description:
     "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
+  applicationName: "Issue Finder",
+  authors: [{ name: "Nischal Acharya", url: "http://acharyanischal.com.np" }],
+  creator: "Nischal Acharya",
+  publisher: "Nischal Acharya",
   keywords: [
     "github issues",
     "good first issue",
@@ -24,11 +30,23 @@ export const metadata: Metadata = {
     "help wanted",
     "contribute",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Issue Finder — Discover GitHub issues worth contributing to",
     description:
       "Search millions of GitHub issues and repositories with powerful filters.",
+    url: "https://issue-finder.acharyanischal.com.np",
+    siteName: "Issue Finder",
     type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary",
+    title: "Issue Finder — Discover GitHub issues worth contributing to",
+    description:
+      "Search millions of GitHub issues and repositories with powerful filters.",
   },
   manifest: "/favicon/site.webmanifest",
   icons: {
@@ -83,6 +101,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <Providers>{children}</Providers>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

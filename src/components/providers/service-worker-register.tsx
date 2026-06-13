@@ -1,0 +1,35 @@
+"use client"
+
+import { useEffect } from "react"
+
+/**
+ * Registers the service worker once the window has loaded.
+ * Renders nothing — purely a side effect. Skipped in development so the SW
+ * cache never interferes with hot reloading.
+ */
+export function ServiceWorkerRegister() {
+  useEffect(() => {
+    if (
+      process.env.NODE_ENV !== "production" ||
+      typeof window === "undefined" ||
+      !("serviceWorker" in navigator)
+    ) {
+      return
+    }
+
+    const register = () => {
+      navigator.serviceWorker.register("/sw.js").catch((error) => {
+        console.error("Service worker registration failed:", error)
+      })
+    }
+
+    if (document.readyState === "complete") {
+      register()
+    } else {
+      window.addEventListener("load", register)
+      return () => window.removeEventListener("load", register)
+    }
+  }, [])
+
+  return null
+}

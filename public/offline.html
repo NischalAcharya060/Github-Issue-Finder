@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline — Issue Finder</title>
+    <link rel="icon" href="/favicon/favicon.ico" sizes="any" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: #e6f5ee;
+        background-color: #0c1512;
+        background-image: radial-gradient(
+            40rem 40rem at 15% -10%,
+            rgba(16, 185, 129, 0.14),
+            transparent 60%
+          ),
+          radial-gradient(
+            36rem 36rem at 100% 0%,
+            rgba(20, 184, 166, 0.1),
+            transparent 55%
+          );
+        text-align: center;
+      }
+      .card {
+        max-width: 28rem;
+      }
+      .mark {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #10b981, rgba(16, 185, 129, 0.55));
+        box-shadow: 0 12px 40px -8px rgba(16, 185, 129, 0.4);
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0 0 8px;
+      }
+      p {
+        font-size: 0.925rem;
+        line-height: 1.6;
+        color: #9bbdb0;
+        margin: 0 0 24px;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #07120d;
+        background: #10b981;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.5);
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+      button:hover {
+        background: #34d399;
+        transform: translateY(-1px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="mark" aria-hidden="true">
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#07120d"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="6" y1="3" x2="6" y2="15" />
+          <circle cx="18" cy="6" r="3" />
+          <circle cx="6" cy="18" r="3" />
+          <path d="M18 9a9 9 0 0 1-9 9" />
+        </svg>
+      </div>
+      <h1>You're offline</h1>
+      <p>
+        Issue Finder needs a connection to search GitHub. Check your network and
+        try again — your last results are still cached.
+      </p>
+      <button onclick="location.reload()">Retry</button>
+    </div>
+  </body>
+</html>
