@@ -1,15 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Menu, GitBranch, Search, BookOpen } from "lucide-react"
+import { Menu, GitBranch, Search, BookOpen, Settings } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "@/components/search/search-bar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { InstallButton } from "@/components/shared/install-button"
 import { SegmentedControl } from "@/components/shared/segmented-control"
+import { SettingsDialog } from "@/components/layout/settings-dialog"
 import { cn } from "@/lib/utils"
 import type { SearchMode, EntityType } from "@/lib/types"
+
 
 const entityOptions: { value: EntityType; label: string; icon: typeof Search }[] = [
   { value: "issues", label: "Issues", icon: Search },
@@ -98,6 +100,13 @@ export function Navbar({
         <div className="flex items-center gap-1.5">
           <InstallButton />
           <ThemeToggle />
+          <SettingsDialog
+            trigger={
+              <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground" aria-label="Settings">
+                <Settings className="size-4" />
+              </Button>
+            }
+          />
         </div>
       </div>
     </header>

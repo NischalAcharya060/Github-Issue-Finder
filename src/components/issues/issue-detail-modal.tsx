@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { getLabelStyle } from "@/lib/utils"
+import { Markdown } from "@/components/shared/markdown"
 import type { GitHubIssue, GitHubLabel } from "@/lib/types"
 
 interface IssueDetailModalProps {
@@ -86,15 +88,19 @@ export function IssueDetailModal({
 
         {issue.labels.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {issue.labels.map((label: GitHubLabel) => (
-              <Badge
-                key={label.id}
-                variant="outline"
-                className="border-border/70 text-[11px] font-normal"
-              >
-                {label.name}
-              </Badge>
-            ))}
+            {issue.labels.map((label: GitHubLabel) => {
+              const labelStyle = getLabelStyle(label.name, label.color)
+              return (
+                <Badge
+                  key={label.id}
+                  variant="outline"
+                  className={`text-[11px] font-normal ${labelStyle.className}`}
+                  style={labelStyle.style}
+                >
+                  {label.name}
+                </Badge>
+              )
+            })}
           </div>
         )}
 
@@ -152,6 +158,13 @@ export function IssueDetailModal({
               </div>
             </>
           )}
+        </div>
+
+        <div className="my-2 max-h-[35vh] overflow-y-auto rounded-xl border border-border/60 bg-secondary/15 p-4 shadow-inner">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Description
+          </div>
+          <Markdown content={issue.body || ""} />
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-3">

@@ -28,6 +28,7 @@ export interface GitHubIssue {
   id: number
   number: number
   title: string
+  body: string | null
   state: "open" | "closed"
   html_url: string
   repository_url: string

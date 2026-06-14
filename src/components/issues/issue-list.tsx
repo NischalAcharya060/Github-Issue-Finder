@@ -75,16 +75,58 @@ export function IssueList({
     )
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const container = e.currentTarget
+    const items = Array.from(container.querySelectorAll("[data-list-item]")) as HTMLElement[]
+    if (items.length === 0) return
+
+    const activeIndex = items.indexOf(document.activeElement as HTMLElement)
+    if (activeIndex === -1) return
+
+    let cols = 1
+    if (typeof window !== "undefined") {
+      if (window.innerWidth >= 1024) cols = 3 // lg:grid-cols-3
+      else if (window.innerWidth >= 640) cols = 2 // sm:grid-cols-2
+    }
+
+    let nextIndex = -1
+    if (e.key === "ArrowRight") {
+      nextIndex = activeIndex + 1
+    } else if (e.key === "ArrowLeft") {
+      nextIndex = activeIndex - 1
+    } else if (e.key === "ArrowDown") {
+      nextIndex = activeIndex + cols
+    } else if (e.key === "ArrowUp") {
+      nextIndex = activeIndex - cols
+    } else {
+      return
+    }
+
+    if (nextIndex >= 0 && nextIndex < items.length) {
+      e.preventDefault()
+      items[nextIndex].focus()
+    }
+  }
+
   return (
     <Stagger
       stagger={0.04}
-      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 outline-none"
+      onKeyDown={handleKeyDown}
     >
       {issues.map((issue) => (
         <StaggerItem
           key={issue.id}
-          className="cursor-pointer"
+          className="cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-shadow"
           onClick={() => onIssueClick?.(issue.id)}
+          tabIndex={0}
+          data-list-item
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              onIssueClick?.(issue.id)
+            }
+          }}
         >
           <IssueCard issue={issue} />
         </StaggerItem>

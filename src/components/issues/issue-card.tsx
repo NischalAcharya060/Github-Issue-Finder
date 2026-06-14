@@ -7,33 +7,13 @@ import { formatDistanceToNow } from "date-fns"
 import { MessageSquare, Star, ExternalLink, GitPullRequest } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { getLabelStyle } from "@/lib/utils"
 import type { GitHubIssue } from "@/lib/types"
 
 function getRepoFromUrl(url: string): string {
   return url.replace("https://api.github.com/repos/", "")
 }
 
-const labelStyles: Record<string, string> = {
-  bug: "bg-red-500/12 text-red-600 dark:text-red-400 border-red-500/25",
-  enhancement:
-    "bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25",
-  documentation:
-    "bg-purple-500/12 text-purple-600 dark:text-purple-400 border-purple-500/25",
-  "good first issue":
-    "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
-  "help wanted":
-    "bg-amber-500/12 text-amber-600 dark:text-amber-400 border-amber-500/25",
-  beginner:
-    "bg-teal-500/12 text-teal-600 dark:text-teal-400 border-teal-500/25",
-  question:
-    "bg-cyan-500/12 text-cyan-600 dark:text-cyan-400 border-cyan-500/25",
-}
-
-function getLabelClassName(name: string, color: string): string {
-  const lower = name.toLowerCase()
-  if (labelStyles[lower]) return labelStyles[lower]
-  return `bg-[${color}]/10 text-foreground border-[${color}]/25`
-}
 
 interface IssueCardProps {
   issue: GitHubIssue
@@ -103,15 +83,19 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
 
         {issue.labels.length > 0 && (
           <div className="mb-4 flex min-h-5 flex-wrap gap-1">
-            {issue.labels.slice(0, 4).map((label) => (
-              <Badge
-                key={label.id}
-                variant="outline"
-                className={`border px-1.5 py-0 text-[10px] font-normal ${getLabelClassName(label.name, label.color)}`}
-              >
-                {label.name}
-              </Badge>
-            ))}
+            {issue.labels.slice(0, 4).map((label) => {
+              const labelStyle = getLabelStyle(label.name, label.color)
+              return (
+                <Badge
+                  key={label.id}
+                  variant="outline"
+                  className={`px-1.5 py-0 text-[10px] font-normal ${labelStyle.className}`}
+                  style={labelStyle.style}
+                >
+                  {label.name}
+                </Badge>
+              )
+            })}
             {issue.labels.length > 4 && (
               <Badge
                 variant="outline"

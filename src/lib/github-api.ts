@@ -14,7 +14,15 @@ const githubApi = axios.create({
 })
 
 githubApi.interceptors.request.use((config) => {
-  const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN
+  // Use client token from localStorage if available, otherwise fallback to public env token
+  let token = null
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("github-token")
+  }
+  if (!token) {
+    token = process.env.NEXT_PUBLIC_GITHUB_TOKEN
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -24,8 +32,17 @@ githubApi.interceptors.request.use((config) => {
 export async function searchIssues(
   params: SearchParams
 ): Promise<SearchResponse> {
-  const { data } = await githubApi.get<SearchResponse>("/search/issues", {
+  const headers: Record<string, string> = {}
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("github-token")
+    if (token) {
+      headers["X-Github-Token"] = token
+    }
+  }
+
+  const { data } = await axios.get<SearchResponse>("/api/search/issues", {
     params,
+    headers,
   })
   return data
 }
@@ -33,10 +50,18 @@ export async function searchIssues(
 export async function searchRepositories(
   params: SearchParams
 ): Promise<RepoSearchResponse> {
-  const { data } = await githubApi.get<RepoSearchResponse>(
-    "/search/repositories",
-    { params }
-  )
+  const headers: Record<string, string> = {}
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("github-token")
+    if (token) {
+      headers["X-Github-Token"] = token
+    }
+  }
+
+  const { data } = await axios.get<RepoSearchResponse>("/api/search/repos", {
+    params,
+    headers,
+  })
   return data
 }
 
@@ -52,3 +77,4 @@ export async function getOrganizationRepos(
 }
 
 export { githubApi }
+
