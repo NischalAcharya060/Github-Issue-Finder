@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { InstallButton } from "@/components/shared/install-button"
 import { SegmentedControl } from "@/components/shared/segmented-control"
 import { SettingsDialog } from "@/components/layout/settings-dialog"
+import { AuthButton } from "@/components/auth/auth-button"
 import { cn } from "@/lib/utils"
 import type { SearchMode, EntityType } from "@/lib/types"
 
@@ -107,6 +108,7 @@ export function Navbar({
               </Button>
             }
           />
+          <AuthButton />
         </div>
       </div>
     </header>
