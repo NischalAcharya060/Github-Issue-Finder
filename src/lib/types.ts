@@ -98,3 +98,20 @@ export interface FilterState {
 }
 
 export type SearchMode = "keyword" | "repo" | "org"
+
+export interface SavedIssue {
+  id: string
+  issueId: number
+  number: number
+  title: string
+  htmlUrl: string
+  repoFullName: string
+  state: string
+  labels: { name: string; color: string }[] | null
+  saved: boolean
+  done: boolean
+  doneAt: string | null
+  note: string | null
+  createdAt: string
+  updatedAt: string
+}

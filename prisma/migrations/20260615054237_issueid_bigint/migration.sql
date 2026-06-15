@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SavedIssue" ALTER COLUMN "issueId" SET DATA TYPE BIGINT;

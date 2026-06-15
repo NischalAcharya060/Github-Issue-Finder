@@ -7,7 +7,9 @@ import { formatDistanceToNow } from "date-fns"
 import { MessageSquare, Star, ExternalLink, GitPullRequest } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getLabelStyle } from "@/lib/utils"
+import { getLabelStyle, cn } from "@/lib/utils"
+import { IssueActions } from "@/components/issues/issue-actions"
+import { useSavedIssuesMap } from "@/hooks/use-saved-issues"
 import type { GitHubIssue } from "@/lib/types"
 
 function getRepoFromUrl(url: string): string {
@@ -22,13 +24,20 @@ interface IssueCardProps {
 export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
   const repoFullName = getRepoFromUrl(issue.repository_url)
   const isOpen = issue.state === "open"
+  const { map } = useSavedIssuesMap()
+  const isDone = map.get(issue.id)?.done ?? false
 
   return (
     <div className="group relative h-full">
       <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <div className="relative flex h-full flex-col rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/8">
+      <div
+        className={cn(
+          "relative flex h-full flex-col rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/8",
+          isDone && "border-emerald-500/30 ring-emerald-500/10"
+        )}
+      >
         <div className="mb-3 flex items-start justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-1.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 text-xs font-medium text-secondary-foreground">
               <GitPullRequest className="size-3 shrink-0 text-muted-foreground" />
               <span className="max-w-[150px] truncate">{repoFullName}</span>
@@ -52,12 +61,17 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
               </span>
               {issue.state}
             </span>
+            {isDone && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                Done
+              </span>
+            )}
           </div>
           <Button
             variant="ghost"
             size="icon-xs"
             asChild
-            className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+            className="shrink-0 text-muted-foreground opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
           >
             <Link
               href={issue.html_url}
@@ -106,6 +120,10 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
             )}
           </div>
         )}
+
+        <div className="mb-3 flex items-center gap-1">
+          <IssueActions issue={issue} />
+        </div>
 
         <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border/50 pt-3 text-[11px] text-muted-foreground">
           {issue.user && (

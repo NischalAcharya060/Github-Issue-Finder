@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// --- Auth.js models ---
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  image         String?
+  githubLogin   String?      @unique
+  accounts    Account[]
+  savedIssues SavedIssue[]
+  createdAt   DateTime     @default(now())
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// --- Feature model: one row per (user, issue) ---
+model SavedIssue {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // GitHub issue snapshot (render without re-fetching)
+  // BigInt: GitHub global issue ids exceed Int4 (2.1B) range.
+  issueId      BigInt
+  number       Int
+  title        String
+  htmlUrl      String
+  repoFullName String
+  state        String
+  labels       Json?
+
+  // Feature flags
+  saved        Boolean   @default(true)
+  done         Boolean   @default(false)
+  doneAt       DateTime?
+  note         String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, issueId])
+  @@index([userId, done])
+  @@index([userId, saved])
+}
