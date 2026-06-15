@@ -31,6 +31,7 @@ function buildQuery(
   }
 
   if (entityType === "issues") {
+    parts.push("is:issue")
     if (filters.labels.length > 0) {
       filters.labels.forEach((label) => {
         parts.push(`label:"${label}"`)
