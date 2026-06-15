@@ -46,7 +46,8 @@ model SavedIssue {
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // GitHub issue snapshot (render without re-fetching)
-  issueId      Int
+  // BigInt: GitHub global issue ids exceed Int4 (2.1B) range.
+  issueId      BigInt
   number       Int
   title        String
   htmlUrl      String

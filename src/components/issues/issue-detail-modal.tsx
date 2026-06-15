@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getLabelStyle } from "@/lib/utils"
 import { Markdown } from "@/components/shared/markdown"
+import { IssueActions } from "@/components/issues/issue-actions"
 import type { GitHubIssue, GitHubLabel } from "@/lib/types"
 
 interface IssueDetailModalProps {
@@ -167,32 +168,36 @@ export function IssueDetailModal({
           <Markdown content={issue.body || ""} />
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-3">
-          {issue.user && (
-            <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Image
-                src={issue.user.avatar_url}
-                alt={issue.user.login}
-                width={24}
-                height={24}
-                className="size-6 rounded-full ring-1 ring-border"
-              />
-              <span className="font-medium text-foreground">
-                {issue.user.login}
+        <div className="space-y-3 border-t border-border/50 pt-3">
+          <IssueActions issue={issue} variant="grid" />
+
+          <div className="flex items-center justify-between gap-3">
+            {issue.user && (
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Image
+                  src={issue.user.avatar_url}
+                  alt={issue.user.login}
+                  width={24}
+                  height={24}
+                  className="size-6 rounded-full ring-1 ring-border"
+                />
+                <span className="font-medium text-foreground">
+                  {issue.user.login}
+                </span>
               </span>
-            </span>
-          )}
-          <Button variant="default" size="sm" asChild>
-            <Link
-              href={issue.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gap-1.5"
-            >
-              <ExternalLink className="size-3.5" />
-              View on GitHub
-            </Link>
-          </Button>
+            )}
+            <Button variant="default" size="sm" asChild>
+              <Link
+                href={issue.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="gap-1.5"
+              >
+                <ExternalLink className="size-3.5" />
+                View on GitHub
+              </Link>
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
