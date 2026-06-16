@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Sparkles, Settings2, Code2, Tags } from "lucide-react"
+import { Sparkles, Settings2, Code2, Tags, Sliders } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { IssueList } from "@/components/issues/issue-list"
 import { Pagination } from "@/components/shared/pagination"
@@ -42,6 +42,12 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
       return savedLabels ? JSON.parse(savedLabels) : ["good first issue"]
     }
     return ["good first issue"]
+  })
+  const [experience] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("developer-experience") || "beginner"
+    }
+    return "beginner"
   })
   const [page, setPage] = useState(1)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -114,6 +120,23 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
         if (ageInDays < 7) score += 5
         else if (ageInDays < 30) score += 2
 
+        // Adjust based on experience level
+        const hasBeginnerLabel = issue.labels.some(l => 
+          ["good first issue", "beginner", "easy", "first-timers-only"].some(b => 
+            l.name.toLowerCase().includes(b)
+          )
+        )
+
+        if (experience === "beginner") {
+          if (hasBeginnerLabel) score += 8
+          else score -= 5
+        } else if (experience === "advanced") {
+          if (hasBeginnerLabel) score -= 8
+          else score += 5
+        } else {
+          if (hasBeginnerLabel) score += 2
+        }
+
         const finalScore = Math.min(Math.max(score + (index % 5), 82), 99)
 
         return {
@@ -173,6 +196,13 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
                 </span>
               ))}
             </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Sliders className="size-3.5 text-primary" />
+            <span className="font-semibold text-foreground">Level:</span>
+            <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20 font-medium capitalize">
+              {experience}
+            </span>
           </div>
         </div>
       </div>
