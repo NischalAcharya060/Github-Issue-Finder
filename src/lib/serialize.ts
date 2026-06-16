@@ -14,8 +14,8 @@ interface PrismaSavedIssue {
   done: boolean
   doneAt: Date | null
   note: string | null
-  status: string
-  prUrl: string | null
+  status?: string
+  prUrl?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -35,8 +35,8 @@ export function serializeSavedIssue(row: PrismaSavedIssue): SavedIssue {
     done: row.done,
     doneAt: row.doneAt ? row.doneAt.toISOString() : null,
     note: row.note,
-    status: row.status,
-    prUrl: row.prUrl,
+    status: row.status ?? "BACKLOG",
+    prUrl: row.prUrl ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   }
