@@ -60,6 +60,8 @@ model SavedIssue {
   done         Boolean   @default(false)
   doneAt       DateTime?
   note         String?
+  status       String    @default("BACKLOG") // BACKLOG, IN_PROGRESS, IN_REVIEW, DONE
+  prUrl        String?
 
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

@@ -133,7 +133,7 @@ export function useGithubSearch(
   return useQuery<SearchResponse | RepoSearchResponse>({
     queryKey: ["github-search", entityType, q, sortField, order, page],
     queryFn: fetchFn,
-    enabled: q.length > 0,
+    enabled: q.length > 0 && entityType !== "foryou",
     staleTime: 60_000,
   })
 }

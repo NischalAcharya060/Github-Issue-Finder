@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Menu, GitBranch, Search, BookOpen, Settings } from "lucide-react"
+import { Menu, GitBranch, Search, BookOpen, Settings, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "@/components/search/search-bar"
@@ -17,6 +17,7 @@ import type { SearchMode, EntityType } from "@/lib/types"
 const entityOptions: { value: EntityType; label: string; icon: typeof Search }[] = [
   { value: "issues", label: "Issues", icon: Search },
   { value: "repositories", label: "Repos", icon: BookOpen },
+  { value: "foryou", label: "For You", icon: Sparkles },
 ]
 
 interface NavbarProps {
@@ -88,15 +89,23 @@ export function Navbar({
           layoutGroup="entity-type"
         />
 
-        <div className="mx-auto max-w-2xl flex-1">
-          <SearchBar
-            value={keyword}
-            onChange={onSearch}
-            onSubmit={onSubmit}
-            mode={searchMode}
-            onModeChange={onSearchModeChange}
-          />
-        </div>
+        {entityType !== "foryou" ? (
+          <div className="mx-auto max-w-2xl flex-1">
+            <SearchBar
+              value={keyword}
+              onChange={onSearch}
+              onSubmit={onSubmit}
+              mode={searchMode}
+              onModeChange={onSearchModeChange}
+            />
+          </div>
+        ) : (
+          <div className="mx-auto flex-1 max-w-2xl text-center">
+            <span className="text-xs font-semibold text-muted-foreground/80 tracking-wide uppercase">
+              ✨ Personalized Recommendation Stream
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center gap-1.5">
           <InstallButton />
