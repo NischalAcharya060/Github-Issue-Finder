@@ -74,7 +74,7 @@ export interface SearchParams {
   page?: number
 }
 
-export type EntityType = "issues" | "repositories" | "organizations"
+export type EntityType = "issues" | "repositories" | "foryou" | "organizations"
 
 export type SortOption =
   | "relevance"
@@ -112,6 +112,8 @@ export interface SavedIssue {
   done: boolean
   doneAt: string | null
   note: string | null
+  status: string
+  prUrl: string | null
   createdAt: string
   updatedAt: string
 }

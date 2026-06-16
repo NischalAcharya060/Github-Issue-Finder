@@ -63,6 +63,8 @@ export function useToggleIssue() {
       issue: GitHubIssue
       saved?: boolean
       done?: boolean
+      status?: string
+      prUrl?: string | null
     }) => {
       const res = await fetch("/api/saved-issues", {
         method: "POST",
@@ -71,6 +73,8 @@ export function useToggleIssue() {
           ...issueSnapshot(vars.issue),
           ...(vars.saved !== undefined && { saved: vars.saved }),
           ...(vars.done !== undefined && { done: vars.done }),
+          ...(vars.status !== undefined && { status: vars.status }),
+          ...(vars.prUrl !== undefined && { prUrl: vars.prUrl }),
         }),
       })
       if (!res.ok) throw new Error("Failed to update issue")
@@ -83,23 +87,45 @@ export function useToggleIssue() {
         const list = old ? [...old] : []
         const idx = list.findIndex((i) => i.issueId === vars.issue.id)
         const snap = issueSnapshot(vars.issue)
+
+        let expectedStatus = vars.status
+        let expectedDone = vars.done
+        let expectedSaved = vars.saved
+
+        if (expectedStatus !== undefined) {
+          expectedDone = expectedStatus === "DONE"
+          expectedSaved = true
+        } else if (expectedDone !== undefined) {
+          expectedStatus = expectedDone ? "DONE" : "BACKLOG"
+          expectedSaved = true
+        } else if (expectedSaved !== undefined) {
+          if (expectedSaved === false) {
+            expectedStatus = "BACKLOG"
+            expectedDone = false
+          }
+        }
+
         if (idx >= 0) {
           list[idx] = {
             ...list[idx],
-            ...(vars.saved !== undefined && { saved: vars.saved }),
-            ...(vars.done !== undefined && {
-              done: vars.done,
-              doneAt: vars.done ? new Date().toISOString() : null,
+            ...(expectedSaved !== undefined && { saved: expectedSaved }),
+            ...(expectedDone !== undefined && {
+              done: expectedDone,
+              doneAt: expectedDone ? new Date().toISOString() : null,
             }),
+            ...(expectedStatus !== undefined && { status: expectedStatus }),
+            ...(vars.prUrl !== undefined && { prUrl: vars.prUrl }),
           }
         } else {
           list.unshift({
             id: `optimistic-${vars.issue.id}`,
             ...snap,
-            saved: vars.saved ?? true,
-            done: vars.done ?? false,
-            doneAt: vars.done ? new Date().toISOString() : null,
+            saved: expectedSaved ?? true,
+            done: expectedDone ?? false,
+            doneAt: expectedDone ? new Date().toISOString() : null,
             note: null,
+            status: expectedStatus ?? "BACKLOG",
+            prUrl: vars.prUrl ?? null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })
@@ -127,6 +153,8 @@ export function usePatchSavedIssue() {
       saved?: boolean
       done?: boolean
       note?: string | null
+      status?: string
+      prUrl?: string | null
     }) => {
       const { issueId, ...body } = vars
       const res = await fetch(`/api/saved-issues/${issueId}`, {

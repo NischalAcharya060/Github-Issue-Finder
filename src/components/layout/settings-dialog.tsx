@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Settings, Shield, Key, CheckCircle2, XCircle, Loader2 } from "lucide-react"
+import { useState } from "react"
+import { Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import axios from "axios"
+import { cn } from "@/lib/utils"
 
 interface SettingsDialogProps {
   open?: boolean
@@ -21,33 +22,69 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogProps) {
-  const [token, setToken] = useState("")
-  const [status, setStatus] = useState<"idle" | "testing" | "success" | "error">("idle")
-  const [username, setUsername] = useState<string | null>(null)
-  const [errorMessage, setErrorMessage] = useState("")
-  const [isTokenSaved, setIsTokenSaved] = useState(false)
-
-  useEffect(() => {
+  const [token, setToken] = useState(() => {
     if (typeof window !== "undefined") {
-      const savedToken = localStorage.getItem("github-token") || ""
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setToken(savedToken)
-      setIsTokenSaved(!!savedToken)
-      if (savedToken) {
-        setStatus("success")
-        setUsername(localStorage.getItem("github-username") || "Connected")
-      }
+      return localStorage.getItem("github-token") || ""
     }
-  }, [open])
+    return ""
+  })
+  const [status, setStatus] = useState<"idle" | "testing" | "success" | "error">(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("github-token")) {
+      return "success"
+    }
+    return "idle"
+  })
+  const [username, setUsername] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("github-username") || null
+    }
+    return null
+  })
+  const [errorMessage, setErrorMessage] = useState("")
+  const [isTokenSaved, setIsTokenSaved] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !!localStorage.getItem("github-token")
+    }
+    return false
+  })
+  const [languages, setLanguages] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedLangs = localStorage.getItem("developer-languages")
+      return savedLangs ? JSON.parse(savedLangs) : ["typescript", "javascript"]
+    }
+    return ["typescript", "javascript"]
+  })
+  const [labels, setLabels] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedLabels = localStorage.getItem("developer-labels")
+      return savedLabels ? JSON.parse(savedLabels) : ["good first issue"]
+    }
+    return ["good first issue"]
+  })
 
   const handleSave = async () => {
+    // Save tech stack settings
+    localStorage.setItem("developer-languages", JSON.stringify(languages))
+    localStorage.setItem("developer-labels", JSON.stringify(labels))
+
     if (!token.trim()) {
       localStorage.removeItem("github-token")
       localStorage.removeItem("github-username")
       setStatus("idle")
       setUsername(null)
       if (onOpenChange) onOpenChange(false)
-      window.location.reload() // Reload to clear headers / refresh states
+      window.location.reload()
+      return
+    }
+
+    const savedToken = localStorage.getItem("github-token") || ""
+    if (token.trim() === savedToken) {
+      // Token didn't change, just close and reload
+      setStatus("success")
+      setTimeout(() => {
+        if (onOpenChange) onOpenChange(false)
+        window.location.reload()
+      }, 300)
       return
     }
 
@@ -69,7 +106,6 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
       setIsTokenSaved(true)
       setStatus("success")
       
-      // Delay closing modal slightly for user feedback
       setTimeout(() => {
         if (onOpenChange) onOpenChange(false)
         window.location.reload()
@@ -110,17 +146,86 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
           </div>
           <DialogTitle className="text-xl font-bold tracking-tight">API Settings</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Configure your GitHub credentials to bypass API rate limiting.
+            Configure your GitHub credentials and personalization preferences.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-3">
+        <div className="space-y-4 py-3 overflow-y-auto max-h-[60vh] pr-1">
+          {/* Tech Stack Customizer */}
+          <div className="rounded-xl bg-secondary/20 p-3.5 space-y-3 border border-border/60">
+            <div className="text-xs font-semibold text-foreground flex items-center gap-1.5 border-b border-border/40 pb-2">
+              <Code2 className="size-4 text-primary" />
+              Developer Tech Stack (Recommendations)
+            </div>
+            
+            <div className="space-y-1.5">
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Languages</span>
+              <div className="flex flex-wrap gap-1">
+                {["typescript", "javascript", "python", "go", "rust", "cpp", "java", "ruby"].map((lang) => {
+                  const active = languages.includes(lang)
+                  return (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => {
+                        setLanguages(prev => 
+                          prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
+                        )
+                      }}
+                      className={cn(
+                        "rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-200 border cursor-pointer",
+                        active 
+                          ? "bg-primary/15 text-primary border-primary/45 shadow-sm" 
+                          : "bg-background/50 text-muted-foreground border-border/60 hover:border-muted-foreground/40 hover:text-foreground"
+                      )}
+                    >
+                      {lang === "cpp" ? "C++" : lang === "typescript" ? "TypeScript" : lang === "javascript" ? "JavaScript" : lang.charAt(0).toUpperCase() + lang.slice(1)}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Target Issue Labels</span>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { id: "good first issue", label: "Good First Issue" },
+                  { id: "help wanted", label: "Help Wanted" },
+                  { id: "beginner", label: "Beginner" },
+                  { id: "documentation", label: "Documentation" }
+                ].map((item) => {
+                  const active = labels.includes(item.id)
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setLabels(prev => 
+                          prev.includes(item.id) ? prev.filter(l => l !== item.id) : [...prev, item.id]
+                        )
+                      }}
+                      className={cn(
+                        "rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-200 border cursor-pointer",
+                        active 
+                          ? "bg-primary/15 text-primary border-primary/45 shadow-sm" 
+                          : "bg-background/50 text-muted-foreground border-border/60 hover:border-muted-foreground/40 hover:text-foreground"
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-xl bg-secondary/35 p-3 text-xs leading-relaxed text-muted-foreground ring-1 ring-border/50">
             <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-foreground">
               <Shield className="size-3.5 text-primary" />
               Security Information
             </div>
-            Your token is stored locally in your browser&apos;s <code className="font-mono text-primary bg-primary/5 px-1 py-0.5 rounded">localStorage</code>. It is only sent to GitHub&apos;s server to authenticate search requests.
+            Your credentials are saved locally in your browser&apos;s <code className="font-mono text-primary bg-primary/5 px-1 py-0.5 rounded">localStorage</code>.
           </div>
 
           <div className="space-y-1.5">
@@ -153,8 +258,8 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
           </div>
 
           {status === "success" && username && (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/8 p-3 text-xs text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="size-4 shrink-0" />
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/8 p-3 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
               <span>
                 Connected as <strong className="font-bold text-foreground">{username}</strong> (5,000 requests/hr limit).
               </span>
@@ -200,7 +305,7 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
                 Testing...
               </>
             ) : (
-              "Save Token"
+              "Save Settings"
             )}
           </Button>
         </div>

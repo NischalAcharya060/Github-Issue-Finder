@@ -41,9 +41,10 @@ const upsertSchema = z.object({
   repoFullName: z.string().min(1).max(255),
   state: z.string().max(20),
   labels: z.array(labelSchema).max(50).optional(),
-  // Optional flag changes. Omitted = leave as-is (default true on create).
   saved: z.boolean().optional(),
   done: z.boolean().optional(),
+  status: z.string().optional(),
+  prUrl: z.string().nullable().optional(),
 })
 
 // POST /api/saved-issues — upsert save/done state for an issue
@@ -68,10 +69,37 @@ export async function POST(req: Request) {
     )
   }
 
-  const { issueId, labels, saved, done, ...snapshot } = parsed.data
+  const { issueId, labels, saved, done, status, prUrl, ...snapshot } = parsed.data
   const userId = session.user.id
   const issueIdBig = BigInt(issueId)
-  const doneAt = done ? new Date() : done === false ? null : undefined
+
+  // Sync status and done/saved flags
+  let finalStatus = status
+  let finalDone = done
+  let finalSaved = saved
+
+  if (finalStatus !== undefined) {
+    if (finalStatus === "DONE") {
+      finalDone = true
+      finalSaved = true
+    } else {
+      finalDone = false
+      finalSaved = true
+    }
+  } else if (finalDone !== undefined) {
+    finalStatus = finalDone ? "DONE" : "BACKLOG"
+    finalSaved = true
+  } else if (finalSaved !== undefined) {
+    if (finalSaved === false) {
+      finalStatus = "BACKLOG"
+      finalDone = false
+    }
+  }
+
+  // Set default values for create
+  const createStatus = finalStatus ?? "BACKLOG"
+  const createSaved = finalSaved ?? true
+  const createDone = finalDone ?? false
 
   const item = await prisma.savedIssue.upsert({
     where: { userId_issueId: { userId, issueId: issueIdBig } },
@@ -80,15 +108,19 @@ export async function POST(req: Request) {
       issueId: issueIdBig,
       ...snapshot,
       labels: labels ?? undefined,
-      saved: saved ?? true,
-      done: done ?? false,
-      doneAt: done ? new Date() : null,
+      saved: createSaved,
+      done: createDone,
+      doneAt: createDone ? new Date() : null,
+      status: createStatus,
+      prUrl: prUrl ?? null,
     },
     update: {
       ...snapshot,
       labels: labels ?? undefined,
-      ...(saved !== undefined && { saved }),
-      ...(done !== undefined && { done, doneAt }),
+      ...(finalSaved !== undefined && { saved: finalSaved }),
+      ...(finalDone !== undefined && { done: finalDone, doneAt: finalDone ? new Date() : null }),
+      ...(finalStatus !== undefined && { status: finalStatus }),
+      ...(prUrl !== undefined && { prUrl }),
     },
   })
 

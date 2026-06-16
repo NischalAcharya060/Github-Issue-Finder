@@ -10,6 +10,8 @@ const patchSchema = z.object({
   saved: z.boolean().optional(),
   done: z.boolean().optional(),
   note: z.string().max(2000).nullable().optional(),
+  status: z.string().optional(),
+  prUrl: z.string().nullable().optional(),
 })
 
 // PATCH /api/saved-issues/[issueId] — toggle done/saved, edit note
@@ -42,7 +44,29 @@ export async function PATCH(
     )
   }
 
-  const { saved, done, note } = parsed.data
+  const { saved, done, note, status, prUrl } = parsed.data
+
+  let finalSaved = saved
+  let finalDone = done
+  let finalStatus = status
+
+  if (finalStatus !== undefined) {
+    if (finalStatus === "DONE") {
+      finalDone = true
+      finalSaved = true
+    } else {
+      finalDone = false
+      finalSaved = true
+    }
+  } else if (finalDone !== undefined) {
+    finalStatus = finalDone ? "DONE" : "BACKLOG"
+    finalSaved = true
+  } else if (finalSaved !== undefined) {
+    if (finalSaved === false) {
+      finalStatus = "BACKLOG"
+      finalDone = false
+    }
+  }
 
   const issueIdBig = BigInt(issueId)
   const existing = await prisma.savedIssue.findUnique({
@@ -55,9 +79,11 @@ export async function PATCH(
   const item = await prisma.savedIssue.update({
     where: { userId_issueId: { userId: session.user.id, issueId: issueIdBig } },
     data: {
-      ...(saved !== undefined && { saved }),
-      ...(done !== undefined && { done, doneAt: done ? new Date() : null }),
+      ...(finalSaved !== undefined && { saved: finalSaved }),
+      ...(finalDone !== undefined && { done: finalDone, doneAt: finalDone ? new Date() : null }),
       ...(note !== undefined && { note }),
+      ...(finalStatus !== undefined && { status: finalStatus }),
+      ...(prUrl !== undefined && { prUrl }),
     },
   })
 

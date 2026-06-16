@@ -13,7 +13,7 @@ import { RepoList } from "@/components/repos/repo-list"
 import { IssueDetailModal } from "@/components/issues/issue-detail-modal"
 import { ExportButton } from "@/components/shared/export-button"
 import { Button } from "@/components/ui/button"
-import { Bookmark } from "lucide-react"
+import { Bookmark, BarChart3 } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -25,6 +25,8 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut"
 import { useHotkey } from "@/hooks/use-hotkey"
+import { ForYouFeed } from "@/components/dashboard/for-you-feed"
+import { SearchAnalytics } from "@/components/dashboard/search-analytics"
 import type { SearchMode, FilterState, SortOption, EntityType, SearchResponse, RepoSearchResponse } from "@/lib/types"
 
 const defaultFilters: FilterState = {
@@ -49,6 +51,7 @@ export default function Home() {
   const [page, setPage] = useState(1)
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
   const [selectedIssue, setSelectedIssue] = useState<number | null>(null)
+  const [showAnalytics, setShowAnalytics] = useState(false)
   const [, setSavedSearches] = useLocalStorage<
     { name: string; query: string; filters: FilterState }[]
   >("saved-searches", [])
@@ -138,7 +141,9 @@ export default function Home() {
         </aside>
 
         <main id="main-content" className="flex-1 space-y-6">
-          {!keyword && !data ? (
+          {entityType === "foryou" ? (
+            <ForYouFeed onIssueClick={setSelectedIssue} />
+          ) : !keyword && !data ? (
             <Welcome onSearch={handleSearch} />
           ) : (
             <>
@@ -160,6 +165,18 @@ export default function Home() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
+                  {keyword && entityType === "issues" && data && (data as SearchResponse).items?.length > 0 && (
+                    <Button
+                      variant={showAnalytics ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setShowAnalytics(!showAnalytics)}
+                      title="Toggle Analytics Insights"
+                      className="gap-1.5 text-muted-foreground cursor-pointer"
+                    >
+                      <BarChart3 className="size-3.5" />
+                      <span className="hidden sm:inline">Insights</span>
+                    </Button>
+                  )}
                   {keyword && entityType === "issues" && (
                     <ExportButton
                       data={data as SearchResponse | undefined}
@@ -172,7 +189,7 @@ export default function Home() {
                       size="sm"
                       onClick={handleSaveSearch}
                       title="Save this search"
-                      className="gap-1.5 text-muted-foreground"
+                      className="gap-1.5 text-muted-foreground cursor-pointer"
                     >
                       <Bookmark className="size-3.5" />
                       <span className="hidden sm:inline">Save</span>
@@ -181,6 +198,10 @@ export default function Home() {
                   <SortDropdown value={sort} onChange={setSort} />
                 </div>
               </div>
+
+              {showAnalytics && data && entityType === "issues" && (data as SearchResponse).items?.length > 0 && (
+                <SearchAnalytics issues={(data as SearchResponse).items} />
+              )}
 
               {entityType === "issues" ? (
                 <IssueList
