@@ -1,3 +1,5 @@
+import { Redis } from "@upstash/redis"
+
 type CacheEntry<T> = {
   data: T
   timestamp: number
@@ -14,7 +16,33 @@ if (typeof window === "undefined") {
   container._serverCache = globalCache
 }
 
-export function getCachedItem<T>(key: string, maxAgeMs = 300_000): T | null {
+// Instantiate Upstash Redis if env vars are present
+let redis: Redis | null = null
+if (
+  typeof window === "undefined" &&
+  process.env.UPSTASH_REDIS_REST_URL &&
+  process.env.UPSTASH_REDIS_REST_TOKEN
+) {
+  try {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  } catch (error) {
+    console.error("Failed to initialize Upstash Redis:", error)
+  }
+}
+
+export async function getCachedItem<T>(key: string, maxAgeMs = 300_000): Promise<T | null> {
+  if (redis) {
+    try {
+      const cached = await redis.get<T>(key)
+      if (cached) return cached
+    } catch (error) {
+      console.warn("Redis read error, falling back to local memory cache:", error)
+    }
+  }
+
   const entry = globalCache.get(key)
   if (!entry) return null
 
@@ -27,7 +55,16 @@ export function getCachedItem<T>(key: string, maxAgeMs = 300_000): T | null {
   return entry.data as T
 }
 
-export function setCachedItem<T>(key: string, data: T): void {
+export async function setCachedItem<T>(key: string, data: T, maxAgeSeconds = 300): Promise<void> {
+  if (redis) {
+    try {
+      await redis.set(key, data, { ex: maxAgeSeconds })
+      return
+    } catch (error) {
+      console.warn("Redis write error, falling back to local memory cache:", error)
+    }
+  }
+
   globalCache.set(key, {
     data,
     timestamp: Date.now(),
@@ -36,10 +73,12 @@ export function setCachedItem<T>(key: string, data: T): void {
   // Periodically clean up expired items (max 1000 items)
   if (globalCache.size > 1000) {
     const now = Date.now()
+    const maxAgeMs = maxAgeSeconds * 1000
     for (const [k, entry] of globalCache.entries()) {
-      if (now - entry.timestamp > 300_000) {
+      if (now - entry.timestamp > maxAgeMs) {
         globalCache.delete(k)
       }
     }
   }
 }
+

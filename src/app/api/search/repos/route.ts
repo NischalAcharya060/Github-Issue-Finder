@@ -1,61 +1,38 @@
 import { NextRequest, NextResponse } from "next/server"
+import { SearchService } from "@/services/search.service"
+import { auth } from "@/auth"
 import axios from "axios"
-import { getCachedItem, setCachedItem } from "@/lib/server-cache"
 
 export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const q = searchParams.get("q") || ""
+  const sort = searchParams.get("sort") || undefined
+  const order = searchParams.get("order") || undefined
+  const page = searchParams.get("page") || "1"
+  const perPage = searchParams.get("per_page") || "30"
+
+  if (!q) {
+    return NextResponse.json({ total_count: 0, items: [] })
+  }
+
+  const clientToken = request.headers.get("x-github-token")
+  const session = await auth()
+  const userId = session?.user?.id
+
   try {
-    const searchParams = request.nextUrl.searchParams
-    const q = searchParams.get("q") || ""
-    const sort = searchParams.get("sort") || ""
-    const order = searchParams.get("order") || ""
-    const page = searchParams.get("page") || "1"
-    const perPage = searchParams.get("per_page") || "30"
-
-    if (!q) {
-      return NextResponse.json({ total_count: 0, items: [] })
-    }
-
-    const userToken = request.headers.get("x-github-token")
-    const serverToken = process.env.GITHUB_TOKEN || process.env.NEXT_PUBLIC_GITHUB_TOKEN
-    const activeToken = userToken || serverToken
-
-    const tokenHash = activeToken ? activeToken.substring(activeToken.length - 8) : "public"
-    const cacheKey = `repos:${q}:${sort}:${order}:${page}:${perPage}:${tokenHash}`
-
-    const cachedData = getCachedItem<unknown>(cacheKey)
-    if (cachedData) {
-      return NextResponse.json(cachedData, {
-        headers: {
-          "X-Cache": "HIT",
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
-        },
-      })
-    }
-
-    const headers: Record<string, string> = {
-      Accept: "application/vnd.github.v3+json",
-    }
-
-    if (activeToken) {
-      headers.Authorization = `Bearer ${activeToken}`
-    }
-
-    const response = await axios.get("https://api.github.com/search/repositories", {
-      params: {
-        q,
-        ...(sort ? { sort } : {}),
-        ...(order ? { order } : {}),
-        page,
-        per_page: perPage,
-      },
-      headers,
+    const { data, cache } = await SearchService.searchRepositories({
+      q,
+      sort,
+      order,
+      page,
+      perPage,
+      userId,
+      clientToken,
     })
 
-    setCachedItem(cacheKey, response.data)
-
-    return NextResponse.json(response.data, {
+    return NextResponse.json(data, {
       headers: {
-        "X-Cache": "MISS",
+        "X-Cache": cache,
         "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
       },
     })
@@ -68,7 +45,8 @@ export async function GET(request: NextRequest) {
     } else if (error instanceof Error) {
       message = error.message
     }
-    console.error("Error in API search repositories proxy:", message)
     return NextResponse.json({ error: message }, { status })
   }
 }
+
+
