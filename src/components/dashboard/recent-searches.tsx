@@ -14,54 +14,45 @@ export function RecentSearches({ onSelect }: RecentSearchesProps) {
     []
   )
 
-  if (searches.length === 0) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <div className="flex size-6 items-center justify-center rounded-lg bg-muted ring-1 ring-border/70">
-            <Clock className="size-3.5 text-muted-foreground" />
-          </div>
-          Recent Searches
-        </div>
-        <p className="text-xs text-muted-foreground">
-          No recent searches yet
-        </p>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-3">
+    <div className="p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <div className="flex size-6 items-center justify-center rounded-lg bg-muted ring-1 ring-border/70">
             <Clock className="size-3.5 text-muted-foreground" />
           </div>
-          Recent Searches
+          Recent
         </div>
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={clearSearches}
-          className="gap-1 text-xs"
-        >
-          <Trash2 className="size-3" />
-          Clear
-        </Button>
-      </div>
-      <div className="space-y-1">
-        {searches.slice(0, 8).map((query) => (
+        {searches.length > 0 && (
           <Button
-            key={query}
             variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2 text-xs"
-            onClick={() => onSelect(query)}
+            size="xs"
+            onClick={clearSearches}
+            className="gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
-            <Search className="size-3 shrink-0" />
-            <span className="truncate">{query}</span>
+            <Trash2 className="size-3" />
+            Clear
           </Button>
-        ))}
+        )}
+      </div>
+      <div className="mt-3">
+        {searches.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No recent searches yet</p>
+        ) : (
+          <div className="space-y-0.5">
+            {searches.slice(0, 8).map((query) => (
+              <button
+                key={query}
+                type="button"
+                onClick={() => onSelect(query)}
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground cursor-pointer"
+              >
+                <Search className="size-3 shrink-0" />
+                <span className="truncate">{query}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
