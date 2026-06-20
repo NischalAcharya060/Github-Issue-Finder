@@ -42,16 +42,16 @@ function buildQuery(
       parts.push(`state:${filters.state}`)
     }
 
-    if (filters.createdYear && filters.createdYear !== "all") {
-      parts.push(
-        `created:${filters.createdYear}-01-01..${filters.createdYear}-12-31`
-      )
+    if (filters.createdFrom || filters.createdTo) {
+      const from = filters.createdFrom || "*"
+      const to = filters.createdTo || "*"
+      parts.push(`created:${from}..${to}`)
     }
 
-    if (filters.updatedYear && filters.updatedYear !== "all") {
-      parts.push(
-        `updated:${filters.updatedYear}-01-01..${filters.updatedYear}-12-31`
-      )
+    if (filters.updatedFrom || filters.updatedTo) {
+      const from = filters.updatedFrom || "*"
+      const to = filters.updatedTo || "*"
+      parts.push(`updated:${from}..${to}`)
     }
 
     if (filters.helpWanted) {
@@ -133,7 +133,7 @@ export function useGithubSearch(
   return useQuery<SearchResponse | RepoSearchResponse>({
     queryKey: ["github-search", entityType, q, sortField, order, page],
     queryFn: fetchFn,
-    enabled: q.length > 0 && entityType !== "foryou",
+    enabled: q.length > 0 && entityType !== "foryou" && entityType !== "trending",
     staleTime: 60_000,
   })
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Menu, GitBranch, Search, BookOpen, Settings, Sparkles } from "lucide-react"
+import { Menu, GitBranch, Search, BookOpen, Settings, Sparkles, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "@/components/search/search-bar"
@@ -18,6 +18,7 @@ const entityOptions: { value: EntityType; label: string; icon: typeof Search }[]
   { value: "issues", label: "Issues", icon: Search },
   { value: "repositories", label: "Repos", icon: BookOpen },
   { value: "foryou", label: "For You", icon: Sparkles },
+  { value: "trending", label: "Trending", icon: TrendingUp },
 ]
 
 interface NavbarProps {
@@ -89,7 +90,19 @@ export function Navbar({
           layoutGroup="entity-type"
         />
 
-        {entityType !== "foryou" ? (
+        {entityType === "foryou" ? (
+          <div className="mx-auto flex-1 max-w-2xl text-center">
+            <span className="text-xs font-semibold text-muted-foreground/80 tracking-wide uppercase">
+              ✨ Personalized Recommendation Stream
+            </span>
+          </div>
+        ) : entityType === "trending" ? (
+          <div className="mx-auto flex-1 max-w-2xl text-center">
+            <span className="text-xs font-semibold text-muted-foreground/80 tracking-wide uppercase">
+              🔥 Trending Across GitHub
+            </span>
+          </div>
+        ) : (
           <div className="mx-auto max-w-2xl flex-1">
             <SearchBar
               value={keyword}
@@ -98,12 +111,6 @@ export function Navbar({
               mode={searchMode}
               onModeChange={onSearchModeChange}
             />
-          </div>
-        ) : (
-          <div className="mx-auto flex-1 max-w-2xl text-center">
-            <span className="text-xs font-semibold text-muted-foreground/80 tracking-wide uppercase">
-              ✨ Personalized Recommendation Stream
-            </span>
           </div>
         )}
 

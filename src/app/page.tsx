@@ -27,6 +27,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut"
 import { useHotkey } from "@/hooks/use-hotkey"
 import { ForYouFeed } from "@/components/dashboard/for-you-feed"
+import { TrendingFeed } from "@/components/dashboard/trending-feed"
 import { SearchAnalytics } from "@/components/dashboard/search-analytics"
 import type { SearchMode, FilterState, SortOption, EntityType, SearchResponse, RepoSearchResponse } from "@/lib/types"
 
@@ -34,8 +35,10 @@ const defaultFilters: FilterState = {
   language: "all",
   labels: [],
   state: "all",
-  createdYear: "all",
-  updatedYear: "all",
+  createdFrom: "",
+  createdTo: "",
+  updatedFrom: "",
+  updatedTo: "",
   minStars: "",
   maxStars: "",
   beginnerFriendly: false,
@@ -143,17 +146,21 @@ export default function Home() {
       />
 
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6">
-        <aside className="hidden w-64 shrink-0 lg:block">
-          <Sidebar
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            onSelectRecentSearch={handleSelectRecentSearch}
-          />
-        </aside>
+        {entityType !== "foryou" && entityType !== "trending" && (
+          <aside className="hidden w-64 shrink-0 lg:block">
+            <Sidebar
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onSelectRecentSearch={handleSelectRecentSearch}
+            />
+          </aside>
+        )}
 
         <main id="main-content" className="flex-1 space-y-6">
           {entityType === "foryou" ? (
             <ForYouFeed onIssueClick={setSelectedIssue} />
+          ) : entityType === "trending" ? (
+            <TrendingFeed onIssueClick={setSelectedIssue} />
           ) : !keyword && !data ? (
             <Welcome onSearch={handleSearch} />
           ) : (

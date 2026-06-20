@@ -74,7 +74,7 @@ export interface SearchParams {
   page?: number
 }
 
-export type EntityType = "issues" | "repositories" | "foryou" | "organizations"
+export type EntityType = "issues" | "repositories" | "foryou" | "trending" | "organizations"
 
 export type SortOption =
   | "relevance"
@@ -88,8 +88,10 @@ export interface FilterState {
   language: string
   labels: string[]
   state: "all" | "open" | "closed"
-  createdYear: string
-  updatedYear: string
+  createdFrom: string
+  createdTo: string
+  updatedFrom: string
+  updatedTo: string
   minStars: string
   maxStars: string
   beginnerFriendly: boolean

@@ -14,15 +14,18 @@ import {
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { LANGUAGES, ISSUE_STATES, YEARS } from "@/lib/constants"
+import { LANGUAGES, ISSUE_STATES } from "@/lib/constants"
+import { cn } from "@/lib/utils"
 import type { FilterState } from "@/lib/types"
 
 const defaultFilters: FilterState = {
   language: "all",
   labels: [],
   state: "all",
-  createdYear: "all",
-  updatedYear: "all",
+  createdFrom: "",
+  createdTo: "",
+  updatedFrom: "",
+  updatedTo: "",
   minStars: "",
   maxStars: "",
   beginnerFriendly: false,
@@ -80,8 +83,10 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
   const activeCount =
     (filters.language !== "all" ? 1 : 0) +
     (filters.state !== "all" ? 1 : 0) +
-    (filters.createdYear !== "all" ? 1 : 0) +
-    (filters.updatedYear !== "all" ? 1 : 0) +
+    (filters.createdFrom ? 1 : 0) +
+    (filters.createdTo ? 1 : 0) +
+    (filters.updatedFrom ? 1 : 0) +
+    (filters.updatedTo ? 1 : 0) +
     (filters.minStars ? 1 : 0) +
     (filters.maxStars ? 1 : 0) +
     filters.labels.length +
@@ -90,7 +95,7 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
     (filters.helpWanted ? 1 : 0)
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 overflow-x-hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/15">
@@ -157,40 +162,115 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
         </FilterSection>
 
         <FilterSection icon={Calendar} title="Time">
-          <div className="space-y-2 pt-4">
-            <Select
-              value={filters.createdYear}
-              onValueChange={(v) => update({ createdYear: v })}
-            >
-              <SelectTrigger className="w-full h-7 text-xs">
-                <SelectValue placeholder="Created year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Any year</SelectItem>
-                {YEARS.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-3 pt-4">
+            {/* Created date range */}
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">Created</span>
+                {(filters.createdFrom || filters.createdTo) && (
+                  <button
+                    type="button"
+                    onClick={() => update({ createdFrom: "", createdTo: "" })}
+                    className="text-[10px] text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="relative min-w-0 flex-1 overflow-hidden">
+                  <Calendar className="pointer-events-none absolute left-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/40" />
+                  <Input
+                    type="date"
+                    value={filters.createdFrom}
+                    onChange={(e) => update({ createdFrom: e.target.value })}
+                    className="h-7 w-full pl-7 text-xs [color-scheme:var(--color-scheme)]"
+                    placeholder="From"
+                  />
+                </div>
+                <span className="shrink-0 text-[10px] text-muted-foreground/40">—</span>
+                <div className="relative min-w-0 flex-1 overflow-hidden">
+                  <Calendar className="pointer-events-none absolute left-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/40" />
+                  <Input
+                    type="date"
+                    value={filters.createdTo}
+                    onChange={(e) => update({ createdTo: e.target.value })}
+                    className="h-7 w-full pl-7 text-xs [color-scheme:var(--color-scheme)]"
+                    placeholder="To"
+                  />
+                </div>
+              </div>
+              {/* Quick preset chips */}
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {[
+                  { label: "24h", days: 1 },
+                  { label: "7d", days: 7 },
+                  { label: "30d", days: 30 },
+                  { label: "90d", days: 90 },
+                  { label: "Year", days: 365 },
+                ].map((preset) => {
+                  const from = new Date()
+                  from.setDate(from.getDate() - preset.days)
+                  const fromStr = from.toISOString().split("T")[0]
+                  const toStr = new Date().toISOString().split("T")[0]
+                  const isActive = filters.createdFrom === fromStr && filters.createdTo === toStr
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => update({ createdFrom: fromStr, createdTo: toStr })}
+                      className={cn(
+                        "rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-all cursor-pointer",
+                        isActive
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                          : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/60"
+                      )}
+                    >
+                      {preset.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
-            <Select
-              value={filters.updatedYear}
-              onValueChange={(v) => update({ updatedYear: v })}
-            >
-              <SelectTrigger className="w-full h-7 text-xs">
-                <SelectValue placeholder="Updated year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Any year</SelectItem>
-                {YEARS.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Updated date range */}
+            <div className="border-t border-border/30 pt-2.5">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">Updated</span>
+                {(filters.updatedFrom || filters.updatedTo) && (
+                  <button
+                    type="button"
+                    onClick={() => update({ updatedFrom: "", updatedTo: "" })}
+                    className="text-[10px] text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="relative min-w-0 flex-1 overflow-hidden">
+                  <Calendar className="pointer-events-none absolute left-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/40" />
+                  <Input
+                    type="date"
+                    value={filters.updatedFrom}
+                    onChange={(e) => update({ updatedFrom: e.target.value })}
+                    className="h-7 w-full pl-7 text-xs [color-scheme:var(--color-scheme)]"
+                    placeholder="From"
+                  />
+                </div>
+                <span className="shrink-0 text-[10px] text-muted-foreground/40">—</span>
+                <div className="relative min-w-0 flex-1 overflow-hidden">
+                  <Calendar className="pointer-events-none absolute left-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/40" />
+                  <Input
+                    type="date"
+                    value={filters.updatedTo}
+                    onChange={(e) => update({ updatedTo: e.target.value })}
+                    className="h-7 w-full pl-7 text-xs [color-scheme:var(--color-scheme)]"
+                    placeholder="To"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </FilterSection>
 
