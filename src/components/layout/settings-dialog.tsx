@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2, Eye, EyeOff, Sliders, Trash2, Ban } from "lucide-react"
+import { useState, useRef } from "react"
+import { Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2, Eye, EyeOff, Sliders, Trash2, Ban, GitPullRequest } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -22,10 +22,19 @@ interface SettingsDialogProps {
   trigger?: React.ReactNode
 }
 
+type TabId = "stack" | "auth" | "ignored"
+
+const tabs: { id: TabId; label: string; icon: typeof Sliders }[] = [
+  { id: "stack", label: "Personalization", icon: Sliders },
+  { id: "auth", label: "Credentials", icon: Key },
+  { id: "ignored", label: "Ignored Repos", icon: Ban },
+]
+
 export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"stack" | "auth" | "ignored">("stack")
+  const [activeSubTab, setActiveSubTab] = useState<TabId>("stack")
   const [showToken, setShowToken] = useState(false)
   const { ignoredRepos, removeIgnoredRepo, clear } = useIgnoredRepos()
+  const tabsRef = useRef<HTMLDivElement>(null)
 
   const [token, setToken] = useState(() => {
     if (typeof window !== "undefined") {
@@ -74,7 +83,6 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
   })
 
   const handleSave = async () => {
-    // Save tech stack settings
     localStorage.setItem("developer-languages", JSON.stringify(languages))
     localStorage.setItem("developer-labels", JSON.stringify(labels))
     localStorage.setItem("developer-experience", experience)
@@ -91,7 +99,6 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
 
     const savedToken = localStorage.getItem("github-token") || ""
     if (token.trim() === savedToken) {
-      // Token didn't change, just close and reload
       setStatus("success")
       setTimeout(() => {
         if (onOpenChange) onOpenChange(false)
@@ -117,7 +124,7 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
       setUsername(login)
       setIsTokenSaved(true)
       setStatus("success")
-      
+
       setTimeout(() => {
         if (onOpenChange) onOpenChange(false)
         window.location.reload()
@@ -148,299 +155,325 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
     }, 300)
   }
 
+  const scrollTabIntoView = (id: TabId) => {
+    setActiveSubTab(id)
+    const container = tabsRef.current
+    if (!container) return
+    const btn = container.querySelector(`[data-tab-id="${id}"]`) as HTMLElement
+    btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-md border-border/80 bg-card/95 shadow-2xl backdrop-blur-md">
-        <DialogHeader>
-          <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
-            <Settings className="size-5 text-primary animate-spin-slow" />
+      <DialogContent className="max-w-[calc(100%-1rem)] sm:max-w-xl lg:max-w-4xl border-border/80 bg-card/95 shadow-2xl backdrop-blur-md p-0 gap-0 overflow-hidden max-h-[90dvh]">
+        {/* Header */}
+        <DialogHeader className="px-5 pt-5 pb-0 shrink-0">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+              <Settings className="size-5 text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg font-bold tracking-tight">Settings</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground font-medium">
+                Manage credentials, personalization, and ignored repositories.
+              </DialogDescription>
+            </div>
           </div>
-          <DialogTitle className="text-xl font-bold tracking-tight">Settings</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground font-medium">
-            Manage your credentials and personalization preferences.
-          </DialogDescription>
         </DialogHeader>
 
-        {/* Tab Selection */}
-        <div className="flex border-b border-border/40 pb-px mb-2 gap-4">
-          <button
-            type="button"
-            onClick={() => setActiveSubTab("stack")}
-            className={cn(
-              "text-xs font-semibold pb-1.5 border-b-2 transition-all cursor-pointer",
-              activeSubTab === "stack"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            🎨 Personalization
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubTab("auth")}
-            className={cn(
-              "text-xs font-semibold pb-1.5 border-b-2 transition-all cursor-pointer",
-              activeSubTab === "auth"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            🔑 Credentials & Rate limits
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubTab("ignored")}
-            className={cn(
-              "text-xs font-semibold pb-1.5 border-b-2 transition-all cursor-pointer",
-              activeSubTab === "ignored"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            🚫 Ignored Repos
-          </button>
+        {/* Mobile tabs — horizontal scroll on small screens, hidden on lg+ */}
+        <div
+          ref={tabsRef}
+          className="flex lg:hidden gap-1 px-5 mt-3 pb-2 overflow-x-auto scrollbar-none border-b border-border/40 shrink-0"
+        >
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeSubTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                data-tab-id={tab.id}
+                type="button"
+                onClick={() => scrollTabIntoView(tab.id)}
+                className={cn(
+                  "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer shrink-0",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                <Icon className="size-3.5" />
+                {tab.label}
+              </button>
+            )
+          })}
         </div>
 
-        <div className="space-y-4 py-2 min-h-[280px]">
-          {/* Sub-Tab 1: Tech Stack & Experience */}
-          {activeSubTab === "stack" && (
-            <div className="space-y-3.5">
-              {/* Experience Level selection */}
-              <div className="rounded-xl bg-secondary/20 p-3.5 space-y-2 border border-border/60">
-                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Sliders className="size-3.5 text-primary" />
-                  Experience Level
-                </span>
-                <span className="text-[10px] text-muted-foreground block leading-relaxed">
-                  Tailors match ratings and recommendation priorities on your For You feed.
-                </span>
-                <div className="grid grid-cols-3 gap-1.5 mt-1 bg-background/50 p-1 rounded-lg border border-border/40">
-                  {[
-                    { id: "beginner", label: "Beginner" },
-                    { id: "intermediate", label: "Intermediate" },
-                    { id: "advanced", label: "Advanced" }
-                  ].map((level) => (
-                    <button
-                      key={level.id}
-                      type="button"
-                      onClick={() => setExperience(level.id)}
-                      className={cn(
-                        "rounded-md py-1 px-1.5 text-center text-xs font-semibold transition-all cursor-pointer",
-                        experience === level.id
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {level.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* Body — sidebar + content */}
+        <div className="flex flex-1 flex-col lg:flex-row min-h-0 overflow-hidden">
+          {/* Desktop sidebar — hidden on mobile */}
+          <nav className="hidden lg:flex flex-col gap-1 w-52 shrink-0 border-r border-border/40 p-4 overflow-y-auto">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeSubTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveSubTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer text-left",
+                    isActive
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  )}
+                >
+                  <span className={cn(
+                    "flex size-8 items-center justify-center rounded-lg shrink-0 transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/80 text-muted-foreground"
+                  )}>
+                    <Icon className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold truncate">{tab.label}</div>
+                    <div className="text-[10px] text-muted-foreground/70 mt-0.5">
+                      {tab.id === "stack" && "Languages & labels"}
+                      {tab.id === "auth" && "GitHub token"}
+                      {tab.id === "ignored" && `${ignoredRepos.length} repo${ignoredRepos.length !== 1 ? "s" : ""}`}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </nav>
 
-              {/* Tech Stack Customizer */}
-              <div className="rounded-xl bg-secondary/20 p-3.5 space-y-3.5 border border-border/60">
-                <div className="text-xs font-semibold text-foreground flex items-center gap-1.5 border-b border-border/40 pb-2">
-                  <Code2 className="size-4 text-primary" />
-                  Programming Languages
-                </div>
-                
-                <div className="space-y-1.5">
-                  <div className="flex flex-wrap gap-1">
-                    {["typescript", "javascript", "python", "go", "rust", "cpp", "java", "ruby"].map((lang) => {
-                      const active = languages.includes(lang)
-                      return (
+          {/* Content panel */}
+          <div className="flex-1 overflow-y-auto p-5">
+            <div className="mx-auto max-w-2xl space-y-5">
+              {/* Personalization */}
+              {activeSubTab === "stack" && (
+                <>
+                  {/* Experience Level */}
+                  <SectionCard icon={Sliders} iconColor="text-primary" title="Experience Level" description="Tailors match ratings and recommendation priorities on your For You feed.">
+                    <div className="grid grid-cols-3 gap-2 bg-background/50 p-1.5 rounded-xl border border-border/40">
+                      {[
+                        { id: "beginner", label: "Beginner" },
+                        { id: "intermediate", label: "Intermediate" },
+                        { id: "advanced", label: "Advanced" },
+                      ].map((level) => (
                         <button
-                          key={lang}
+                          key={level.id}
                           type="button"
-                          onClick={() => {
-                            setLanguages(prev => 
-                              prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
-                            )
-                          }}
+                          onClick={() => setExperience(level.id)}
                           className={cn(
-                            "rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-200 border cursor-pointer",
-                            active 
-                              ? "bg-primary/15 text-primary border-primary/45 shadow-sm font-semibold" 
-                              : "bg-background/50 text-muted-foreground border-border/60 hover:border-muted-foreground/40 hover:text-foreground"
+                            "rounded-lg py-2 px-3 text-center text-sm font-semibold transition-all cursor-pointer",
+                            experience === level.id
+                              ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
                           )}
                         >
-                          {lang === "cpp" ? "C++" : lang === "typescript" ? "TypeScript" : lang === "javascript" ? "JavaScript" : lang.charAt(0).toUpperCase() + lang.slice(1)}
+                          {level.label}
                         </button>
-                      )
-                    })}
-                  </div>
-                </div>
+                      ))}
+                    </div>
+                  </SectionCard>
 
-                <div className="space-y-1.5 pt-1 border-t border-border/40">
-                  <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Target Issue Labels</span>
-                  <div className="flex flex-wrap gap-1">
-                    {[
-                      { id: "good first issue", label: "Good First Issue" },
-                      { id: "help wanted", label: "Help Wanted" },
-                      { id: "beginner", label: "Beginner" },
-                      { id: "documentation", label: "Documentation" }
-                    ].map((item) => {
-                      const active = labels.includes(item.id)
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setLabels(prev => 
-                              prev.includes(item.id) ? prev.filter(l => l !== item.id) : [...prev, item.id]
-                            )
-                          }}
-                          className={cn(
-                            "rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-200 border cursor-pointer",
-                            active 
-                              ? "bg-primary/15 text-primary border-primary/45 shadow-sm font-semibold" 
-                              : "bg-background/50 text-muted-foreground border-border/60 hover:border-muted-foreground/40 hover:text-foreground"
-                          )}
-                        >
-                          {item.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+                  {/* Programming Languages */}
+                  <SectionCard icon={Code2} iconColor="text-primary" title="Programming Languages" description="Select languages that match your stack.">
+                    <div className="flex flex-wrap gap-2">
+                      {["typescript", "javascript", "python", "go", "rust", "cpp", "java", "ruby"].map((lang) => {
+                        const active = languages.includes(lang)
+                        return (
+                          <button
+                            key={lang}
+                            type="button"
+                            onClick={() => {
+                              setLanguages(prev =>
+                                prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
+                              )
+                            }}
+                            className={cn(
+                              "rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200 border cursor-pointer",
+                              active
+                                ? "bg-primary/15 text-primary border-primary/45 shadow-sm font-semibold"
+                                : "bg-background/50 text-muted-foreground border-border/60 hover:border-muted-foreground/40 hover:text-foreground"
+                            )}
+                          >
+                            {lang === "cpp" ? "C++" : lang === "typescript" ? "TypeScript" : lang === "javascript" ? "JavaScript" : lang.charAt(0).toUpperCase() + lang.slice(1)}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </SectionCard>
 
-          {/* Sub-Tab 3: Ignored Repositories */}
-          {activeSubTab === "ignored" && (
-            <div className="space-y-3.5">
-              <div className="rounded-xl bg-secondary/20 p-3.5 space-y-2 border border-border/60">
-                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Ban className="size-3.5 text-destructive" />
-                  Ignored Repositories
-                </span>
-                <span className="text-[10px] text-muted-foreground block leading-relaxed">
-                  Repositories added here will be hidden from your search results. Click the eye-off icon on any issue or repo card to add it.
-                </span>
-              </div>
+                  {/* Target Labels */}
+                  <SectionCard icon={Code2} iconColor="text-muted-foreground" title="Target Issue Labels" description="Preferred labels for your personalized feed.">
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "good first issue", label: "Good First Issue" },
+                        { id: "help wanted", label: "Help Wanted" },
+                        { id: "beginner", label: "Beginner" },
+                        { id: "documentation", label: "Documentation" },
+                      ].map((item) => {
+                        const active = labels.includes(item.id)
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setLabels(prev =>
+                                prev.includes(item.id) ? prev.filter(l => l !== item.id) : [...prev, item.id]
+                              )
+                            }}
+                            className={cn(
+                              "rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200 border cursor-pointer",
+                              active
+                                ? "bg-primary/15 text-primary border-primary/45 shadow-sm font-semibold"
+                                : "bg-background/50 text-muted-foreground border-border/60 hover:border-muted-foreground/40 hover:text-foreground"
+                            )}
+                          >
+                            {item.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </SectionCard>
+                </>
+              )}
 
-              {ignoredRepos.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-background/30 p-6 text-center">
-                  <Ban className="size-8 text-muted-foreground/40 mb-2" />
-                  <p className="text-xs text-muted-foreground font-medium">No ignored repositories</p>
-                  <p className="text-[10px] text-muted-foreground/70 mt-1">
-                    Click the <EyeOff className="size-3 inline" /> icon on any card to ignore a repository.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
-                  {ignoredRepos.map((repo) => (
-                    <div
-                      key={repo}
-                      className="flex items-center justify-between rounded-lg border border-border/60 bg-background/50 px-3 py-2"
-                    >
-                      <span className="text-xs font-medium text-foreground truncate">{repo}</span>
+              {/* Credentials */}
+              {activeSubTab === "auth" && (
+                <>
+                  <SectionCard icon={Shield} iconColor="text-primary" title="Local Environment Security" description="">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Credential storage is sandboxed in your browser&apos;s <code className="font-mono text-primary bg-primary/5 px-1.5 py-0.5 rounded text-xs">localStorage</code> and only sent directly to GitHub APIs.
+                    </p>
+                  </SectionCard>
+
+                  <div className="space-y-3 rounded-xl border border-border/60 bg-secondary/20 p-4">
+                    <label htmlFor="token-input" className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Key className="size-4 text-muted-foreground" />
+                        Personal Access Token (PAT)
+                      </span>
                       <button
                         type="button"
-                        onClick={() => removeIgnoredRepo(repo)}
-                        className="shrink-0 text-muted-foreground hover:text-destructive transition-colors cursor-pointer ml-2"
-                        title={`Remove ${repo} from ignore list`}
-                        aria-label={`Remove ${repo}`}
+                        onClick={() => setShowToken(!showToken)}
+                        className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        <Trash2 className="size-3.5" />
+                        {showToken ? <><EyeOff className="size-3.5" /> Hide</> : <><Eye className="size-3.5" /> Show</>}
                       </button>
+                    </label>
+                    <Input
+                      id="token-input"
+                      type={showToken ? "text" : "password"}
+                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                      value={token}
+                      onChange={(e) => {
+                        setToken(e.target.value)
+                        if (status === "success" || status === "error") setStatus("idle")
+                      }}
+                      className="h-10 rounded-xl border-border bg-background focus-visible:ring-primary/30 text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Create a token under{" "}
+                      <a
+                        href="https://github.com/settings/tokens"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        GitHub Developer settings
+                      </a>. No scopes are required for searching public repositories.
+                    </p>
+                  </div>
+
+                  {status === "success" && username && (
+                    <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/8 p-4 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                      <div className="flex size-9 items-center justify-center rounded-full bg-emerald-500/15">
+                        <CheckCircle2 className="size-5 text-emerald-500" />
+                      </div>
+                      <div>
+                        <span className="font-semibold">Connected as </span>
+                        <strong className="font-bold text-foreground">{username}</strong>
+                        <span className="block text-xs text-muted-foreground mt-0.5">5,000 requests/hr limit</span>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  )}
+
+                  {status === "error" && (
+                    <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/8 p-4 text-sm text-destructive-foreground">
+                      <XCircle className="size-5 shrink-0 text-destructive" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+                </>
               )}
 
-              {ignoredRepos.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clear}
-                  className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer"
-                >
-                  Clear All
-                </Button>
-              )}
-            </div>
-          )}
+              {/* Ignored Repos */}
+              {activeSubTab === "ignored" && (
+                <>
+                  <SectionCard icon={Ban} iconColor="text-destructive" title="Ignored Repositories" description="Repositories added here will be hidden from your search results. Click the eye-off icon on any card to add one." />
 
-          {/* Sub-Tab 2: GitHub API PAT Authentications */}
-          {activeSubTab === "auth" && (
-            <div className="space-y-4">
-              <div className="rounded-xl bg-secondary/35 p-3 text-xs leading-relaxed text-muted-foreground border border-border/60">
-                <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-foreground">
-                  <Shield className="size-3.5 text-primary" />
-                  Local Environment Security
-                </div>
-                Credential storage is sandboxed in your browser&apos;s <code className="font-mono text-primary bg-primary/5 px-1 py-0.5 rounded">localStorage</code> and only sent directly to GitHub APIs.
-              </div>
+                  {ignoredRepos.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-background/30 p-10 text-center">
+                      <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/50 mb-3">
+                        <Ban className="size-7 text-muted-foreground/40" />
+                      </div>
+                      <p className="text-sm font-semibold text-muted-foreground">No ignored repositories</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
+                        Click the <EyeOff className="size-3 inline" /> icon on any issue or repo card to hide results from that repository.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1">
+                      {ignoredRepos.map((repo) => (
+                        <div
+                          key={repo}
+                          className="flex items-center justify-between rounded-xl border border-border/60 bg-background/50 px-4 py-3 transition-colors hover:bg-background/80"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-muted/60 shrink-0">
+                              <GitPullRequest className="size-4 text-muted-foreground" />
+                            </div>
+                            <span className="text-sm font-medium text-foreground truncate">{repo}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeIgnoredRepo(repo)}
+                            className="shrink-0 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                            title={`Remove ${repo} from ignore list`}
+                            aria-label={`Remove ${repo}`}
+                          >
+                            <Trash2 className="size-3.5" />
+                            <span className="hidden sm:inline">Remove</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-              <div className="space-y-1.5">
-                <label htmlFor="token-input" className="text-xs font-semibold text-foreground flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Key className="size-3.5 text-muted-foreground" />
-                    Personal Access Token (PAT)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowToken(!showToken)}
-                    className="text-[10px] text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    {showToken ? (
-                      <>
-                        <EyeOff className="size-3" /> Hide Token
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="size-3" /> Show Token
-                      </>
-                    )}
-                  </button>
-                </label>
-                <Input
-                  id="token-input"
-                  type={showToken ? "text" : "password"}
-                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                  value={token}
-                  onChange={(e) => {
-                    setToken(e.target.value)
-                    if (status === "success" || status === "error") setStatus("idle")
-                  }}
-                  className="h-9 rounded-xl border-border bg-background focus-visible:ring-primary/30"
-                />
-                <p className="text-[10px] text-muted-foreground leading-normal">
-                  Create a token under{" "}
-                  <a
-                    href="https://github.com/settings/tokens"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline font-medium"
-                  >
-                    GitHub Developer settings
-                  </a>. No scopes are required for searching public repositories.
-                </p>
-              </div>
-
-              {status === "success" && username && (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/8 p-3 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                  <CheckCircle2 className="size-4 shrink-0 text-emerald-500 animate-pulse" />
-                  <span>
-                    Connected as <strong className="font-bold text-foreground">{username}</strong> (5,000 requests/hr limit).
-                  </span>
-                </div>
-              )}
-
-              {status === "error" && (
-                <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/8 p-3 text-xs text-destructive-foreground">
-                  <XCircle className="size-4 shrink-0 text-destructive" />
-                  <span className="truncate">{errorMessage}</span>
-                </div>
+                  {ignoredRepos.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clear}
+                      className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer"
+                    >
+                      Clear All ({ignoredRepos.length})
+                    </Button>
+                  )}
+                </>
               )}
             </div>
-          )}
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-border/40 pt-3.5">
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 border-t border-border/40 px-5 py-3.5 shrink-0">
           {isTokenSaved && activeSubTab === "auth" && (
             <Button
               variant="outline"
@@ -464,7 +497,7 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
             size="sm"
             onClick={handleSave}
             disabled={status === "testing"}
-            className="min-w-[90px] cursor-pointer"
+            className="min-w-[100px] cursor-pointer"
           >
             {status === "testing" ? (
               <>
@@ -478,5 +511,36 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function SectionCard({
+  icon: Icon,
+  iconColor,
+  title,
+  description,
+  children,
+}: {
+  icon: typeof Sliders
+  iconColor: string
+  title: string
+  description: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-secondary/20 p-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <div className={cn("flex size-9 items-center justify-center rounded-lg bg-background/60 ring-1 ring-border/40 shrink-0", iconColor)}>
+          <Icon className="size-4.5" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold text-foreground">{title}</h3>
+          {description && (
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+          )}
+        </div>
+      </div>
+      {children && <div className="pl-0">{children}</div>}
+    </div>
   )
 }
