@@ -74,9 +74,11 @@ export default function Home() {
     page
   )
 
-  const filteredIssues = (data as SearchResponse | undefined)?.items?.filter(
-    (issue) => !isIgnored(issue.repository_url.replace("https://api.github.com/repos/", ""))
-  )
+  const filteredIssues = entityType !== "repositories"
+    ? (data as SearchResponse | undefined)?.items?.filter(
+        (issue) => !isIgnored(issue.repository_url.replace("https://api.github.com/repos/", ""))
+      )
+    : undefined
   const filteredRepoData = data && entityType === "repositories"
     ? { ...(data as RepoSearchResponse), items: (data as RepoSearchResponse).items.filter((r) => !isIgnored(r.full_name)) }
     : (data as RepoSearchResponse | undefined)
