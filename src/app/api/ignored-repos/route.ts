@@ -63,10 +63,6 @@ export async function POST(req: Request) {
   return NextResponse.json({ item: item.repoFullName })
 }
 
-const removeSchema = z.object({
-  repoFullName: z.string().min(1).max(255),
-})
-
 // DELETE /api/ignored-repos — remove a repo from the ignore list
 export async function DELETE(req: Request) {
   const session = await auth()

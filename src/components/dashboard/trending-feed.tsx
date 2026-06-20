@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { TrendingUp, Flame, GitPullRequest, Star, MessageSquare, Timer, RefreshCw } from "lucide-react"
+import { TrendingUp, Flame, Star, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { IssueList } from "@/components/issues/issue-list"
 import { Pagination } from "@/components/shared/pagination"
