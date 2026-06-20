@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2, Eye, EyeOff, Sliders } from "lucide-react"
+import { Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2, Eye, EyeOff, Sliders, Trash2, Ban } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import axios from "axios"
 import { cn } from "@/lib/utils"
+import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 
 interface SettingsDialogProps {
   open?: boolean
@@ -22,8 +23,9 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"stack" | "auth">("stack")
+  const [activeSubTab, setActiveSubTab] = useState<"stack" | "auth" | "ignored">("stack")
   const [showToken, setShowToken] = useState(false)
+  const { ignoredRepos, removeIgnoredRepo, clear } = useIgnoredRepos()
 
   const [token, setToken] = useState(() => {
     if (typeof window !== "undefined") {
@@ -186,6 +188,18 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
           >
             🔑 Credentials & Rate limits
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("ignored")}
+            className={cn(
+              "text-xs font-semibold pb-1.5 border-b-2 transition-all cursor-pointer",
+              activeSubTab === "ignored"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            🚫 Ignored Repos
+          </button>
         </div>
 
         <div className="space-y-4 py-2 min-h-[280px]">
@@ -291,6 +305,62 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Sub-Tab 3: Ignored Repositories */}
+          {activeSubTab === "ignored" && (
+            <div className="space-y-3.5">
+              <div className="rounded-xl bg-secondary/20 p-3.5 space-y-2 border border-border/60">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Ban className="size-3.5 text-destructive" />
+                  Ignored Repositories
+                </span>
+                <span className="text-[10px] text-muted-foreground block leading-relaxed">
+                  Repositories added here will be hidden from your search results. Click the eye-off icon on any issue or repo card to add it.
+                </span>
+              </div>
+
+              {ignoredRepos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-background/30 p-6 text-center">
+                  <Ban className="size-8 text-muted-foreground/40 mb-2" />
+                  <p className="text-xs text-muted-foreground font-medium">No ignored repositories</p>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">
+                    Click the <EyeOff className="size-3 inline" /> icon on any card to ignore a repository.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
+                  {ignoredRepos.map((repo) => (
+                    <div
+                      key={repo}
+                      className="flex items-center justify-between rounded-lg border border-border/60 bg-background/50 px-3 py-2"
+                    >
+                      <span className="text-xs font-medium text-foreground truncate">{repo}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeIgnoredRepo(repo)}
+                        className="shrink-0 text-muted-foreground hover:text-destructive transition-colors cursor-pointer ml-2"
+                        title={`Remove ${repo} from ignore list`}
+                        aria-label={`Remove ${repo}`}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {ignoredRepos.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clear}
+                  className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer"
+                >
+                  Clear All
+                </Button>
+              )}
             </div>
           )}
 

@@ -21,6 +21,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { useGithubSearch } from "@/hooks/use-github-search"
+import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut"
@@ -59,6 +60,8 @@ export default function Home() {
 
   const debouncedKeyword = useDebounce(keyword, 400)
 
+  const { isIgnored } = useIgnoredRepos()
+
   const { data, isLoading, isError } = useGithubSearch(
     debouncedKeyword,
     searchMode,
@@ -67,6 +70,14 @@ export default function Home() {
     sort,
     page
   )
+
+  const filteredIssues = (data as SearchResponse | undefined)?.items?.filter(
+    (issue) => !isIgnored(issue.repository_url.replace("https://api.github.com/repos/", ""))
+  )
+  const filteredRepoData = data && entityType === "repositories"
+    ? { ...(data as RepoSearchResponse), items: (data as RepoSearchResponse).items.filter((r) => !isIgnored(r.full_name)) }
+    : (data as RepoSearchResponse | undefined)
+
 
   const handleSearch = useCallback(
     (value: string) => {
@@ -199,13 +210,13 @@ export default function Home() {
                 </div>
               </div>
 
-              {showAnalytics && data && entityType === "issues" && (data as SearchResponse).items?.length > 0 && (
-                <SearchAnalytics issues={(data as SearchResponse).items} />
+              {showAnalytics && data && entityType === "issues" && filteredIssues && filteredIssues.length > 0 && (
+                <SearchAnalytics issues={filteredIssues} />
               )}
 
               {entityType === "issues" ? (
                 <IssueList
-                  issues={(data as SearchResponse | undefined)?.items}
+                  issues={filteredIssues}
                   isLoading={isLoading}
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
@@ -213,13 +224,13 @@ export default function Home() {
                 />
               ) : entityType === "repositories" ? (
                 <RepoList
-                  data={data as RepoSearchResponse | undefined}
+                  data={filteredRepoData}
                   isLoading={isLoading}
                   isError={isError}
                 />
               ) : (
                 <IssueList
-                  issues={(data as SearchResponse | undefined)?.items}
+                  issues={filteredIssues}
                   isLoading={isLoading}
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
@@ -257,7 +268,7 @@ export default function Home() {
 
       <IssueDetailModal
         issueId={selectedIssue}
-        issues={(data as SearchResponse | undefined)?.items ?? []}
+        issues={filteredIssues ?? []}
         onClose={() => setSelectedIssue(null)}
       />
     </div>

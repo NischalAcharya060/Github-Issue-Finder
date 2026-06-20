@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { Star, GitFork, ExternalLink, Code2, AlertTriangle } from "lucide-react"
+import { Star, GitFork, ExternalLink, Code2, AlertTriangle, EyeOff } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatePanel } from "@/components/shared/state-panel"
 import { Stagger, StaggerItem } from "@/components/motion/motion-primitives"
+import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import type { RepoSearchResponse, GitHubRepo } from "@/lib/types"
 
 interface RepoListProps {
@@ -69,6 +70,7 @@ export function RepoList({ data, isLoading, isError }: RepoListProps) {
 }
 
 function RepoCard({ repo }: { repo: GitHubRepo }) {
+  const { addIgnoredRepo } = useIgnoredRepos()
   return (
     <div className="group relative h-full">
       <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -82,15 +84,28 @@ function RepoCard({ repo }: { repo: GitHubRepo }) {
           >
             {repo.full_name}
           </Link>
-          <Link
-            href={repo.html_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open on GitHub"
-            className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
-          >
-            <ExternalLink className="size-3.5" />
-          </Link>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                addIgnoredRepo(repo.full_name)
+              }}
+              className="shrink-0 text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100 cursor-pointer"
+              title={`Hide ${repo.full_name} from results`}
+              aria-label={`Ignore ${repo.full_name}`}
+            >
+              <EyeOff className="size-3.5" />
+            </button>
+            <Link
+              href={repo.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open on GitHub"
+              className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+            >
+              <ExternalLink className="size-3.5" />
+            </Link>
+          </div>
         </div>
 
         {repo.description && (

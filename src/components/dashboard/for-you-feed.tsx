@@ -7,6 +7,7 @@ import { IssueList } from "@/components/issues/issue-list"
 import { Pagination } from "@/components/shared/pagination"
 import { useGithubSearch } from "@/hooks/use-github-search"
 import { SettingsDialog } from "@/components/layout/settings-dialog"
+import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import type { FilterState, SearchResponse } from "@/lib/types"
 
 const defaultFilters: FilterState = {
@@ -49,6 +50,7 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
     }
     return "beginner"
   })
+  const { isIgnored } = useIgnoredRepos()
   const [page, setPage] = useState(1)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -105,6 +107,8 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
     )
   }
 
+  const getRepoFromUrl = (url: string) => url.replace("https://api.github.com/repos/", "")
+
   // Add match scores to issues dynamically
   const issuesWithMatchScores = data
     ? (data as SearchResponse).items.map((issue, index) => {
@@ -145,6 +149,10 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
         }
       })
     : []
+
+  const filteredIssues = issuesWithMatchScores.filter(
+    (issue) => !isIgnored(getRepoFromUrl(issue.repository_url))
+  )
 
   return (
     <div className="space-y-6">
@@ -209,7 +217,7 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
 
       {/* Issues Listing */}
       <IssueList
-        issues={issuesWithMatchScores}
+        issues={filteredIssues}
         isLoading={isLoading}
         isError={isError}
         totalCount={data?.total_count ?? 0}

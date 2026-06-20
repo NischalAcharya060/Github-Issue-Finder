@@ -4,12 +4,13 @@ import { memo } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
-import { MessageSquare, Star, ExternalLink, GitPullRequest } from "lucide-react"
+import { MessageSquare, Star, ExternalLink, GitPullRequest, EyeOff } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getLabelStyle, cn } from "@/lib/utils"
 import { IssueActions } from "@/components/issues/issue-actions"
 import { useSavedIssuesMap } from "@/hooks/use-saved-issues"
+import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import type { GitHubIssue } from "@/lib/types"
 
 function getRepoFromUrl(url: string): string {
@@ -26,6 +27,7 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
   const isOpen = issue.state === "open"
   const { map } = useSavedIssuesMap()
   const isDone = map.get(issue.id)?.done ?? false
+  const { addIgnoredRepo } = useIgnoredRepos()
 
   return (
     <div className="group relative h-full">
@@ -41,6 +43,17 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
             <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 text-xs font-medium text-secondary-foreground">
               <GitPullRequest className="size-3 shrink-0 text-muted-foreground" />
               <span className="max-w-[150px] truncate">{repoFullName}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  addIgnoredRepo(repoFullName)
+                }}
+                className="ml-0.5 shrink-0 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                title={`Hide all issues from ${repoFullName}`}
+                aria-label={`Ignore ${repoFullName}`}
+              >
+                <EyeOff className="size-3" />
+              </button>
             </span>
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
