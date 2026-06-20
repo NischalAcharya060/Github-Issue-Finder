@@ -27,18 +27,34 @@ export interface LabelStyle {
   style?: React.CSSProperties
 }
 
+function getTextColorForBackground(hexColor: string): string {
+  const hex = hexColor.replace("#", "")
+  const r = Number.parseInt(hex.substring(0, 2), 16)
+  const g = Number.parseInt(hex.substring(2, 4), 16)
+  const b = Number.parseInt(hex.substring(4, 6), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.5 ? "#000" : "#fff"
+}
+
 export function getLabelStyle(name: string, hexColor: string): LabelStyle {
+  const cleanColor = hexColor.startsWith("#") ? hexColor : `#${hexColor}`
   const lower = name.toLowerCase()
   if (labelStyles[lower]) {
-    return { className: labelStyles[lower] }
+    const cleaned = labelStyles[lower]
+      .split(/\s+/)
+      .filter((c) => !c.startsWith("text-") && !c.includes(":text-"))
+      .join(" ")
+    return {
+      className: cleaned,
+      style: { color: getTextColorForBackground(cleanColor) },
+    }
   }
-  const cleanColor = hexColor.startsWith("#") ? hexColor : `#${hexColor}`
   return {
-    className: "border text-foreground/90 backdrop-blur-[2px]",
+    className: "border backdrop-blur-[2px]",
     style: {
-      backgroundColor: `${cleanColor}1c`, // ~11% opacity
-      borderColor: `${cleanColor}40`,     // ~25% opacity
-      color: cleanColor,
+      backgroundColor: `${cleanColor}1c`,
+      borderColor: `${cleanColor}40`,
+      color: getTextColorForBackground(cleanColor),
     },
   }
 }
