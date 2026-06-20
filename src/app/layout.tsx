@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/providers";
 import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -102,6 +103,7 @@ export default function RootLayout({
         </a>
         <Providers>{children}</Providers>
         <ServiceWorkerRegister />
+        <Toaster richColors position="bottom-right" closeButton />
       </body>
     </html>
   );

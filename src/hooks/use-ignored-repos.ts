@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useSession } from "next-auth/react"
-import { useMemo } from "react"
+import { toast } from "sonner"
 import { useLocalStorage } from "./use-local-storage"
 
 async function fetchIgnoredRepos(): Promise<string[]> {
@@ -42,7 +42,6 @@ export function useIgnoredRepos() {
   const isAuthed = status === "authenticated"
   const queryClient = useQueryClient()
 
-  // localStorage fallback for unauthenticated users
   const [localIgnored, setLocalIgnored] = useLocalStorage<string[]>("ignored-repos", [])
 
   const { data: remoteIgnored } = useQuery({
@@ -64,8 +63,12 @@ export function useIgnoredRepos() {
       )
       return { prev }
     },
-    onError: (_err, _repo, ctx) => {
+    onSuccess: (_, repoFullName) => {
+      toast.success(`"${repoFullName}" hidden from results`)
+    },
+    onError: (_err, repoFullName, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(["ignored-repos"], ctx.prev)
+      toast.error(`Failed to hide "${repoFullName}"`)
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["ignored-repos"] })
@@ -82,8 +85,12 @@ export function useIgnoredRepos() {
       )
       return { prev }
     },
-    onError: (_err, _repo, ctx) => {
+    onSuccess: (_, repoFullName) => {
+      toast.success(`"${repoFullName}" restored to results`)
+    },
+    onError: (_err, repoFullName, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(["ignored-repos"], ctx.prev)
+      toast.error(`Failed to restore "${repoFullName}"`)
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["ignored-repos"] })
@@ -98,8 +105,12 @@ export function useIgnoredRepos() {
       queryClient.setQueryData<string[]>(["ignored-repos"], [])
       return { prev }
     },
+    onSuccess: () => {
+      toast.success("All repositories restored to results")
+    },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(["ignored-repos"], ctx.prev)
+      toast.error("Failed to clear ignored repos")
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["ignored-repos"] })
@@ -114,9 +125,11 @@ export function useIgnoredRepos() {
     if (isAuthed) {
       addMutation.mutate(repoFullName)
     } else {
-      setLocalIgnored((prev) =>
-        prev.includes(repoFullName) ? prev : [...prev, repoFullName]
-      )
+      setLocalIgnored((prev) => {
+        if (prev.includes(repoFullName)) return prev
+        toast.success(`"${repoFullName}" hidden from results`)
+        return [...prev, repoFullName]
+      })
     }
   }
 
@@ -124,7 +137,10 @@ export function useIgnoredRepos() {
     if (isAuthed) {
       removeMutation.mutate(repoFullName)
     } else {
-      setLocalIgnored((prev) => prev.filter((r) => r !== repoFullName))
+      setLocalIgnored((prev) => {
+        toast.success(`"${repoFullName}" restored to results`)
+        return prev.filter((r) => r !== repoFullName)
+      })
     }
   }
 
@@ -133,6 +149,7 @@ export function useIgnoredRepos() {
       clearMutation.mutate()
     } else {
       setLocalIgnored([])
+      toast.success("All repositories restored to results")
     }
   }
 
