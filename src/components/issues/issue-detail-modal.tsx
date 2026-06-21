@@ -60,13 +60,13 @@ export function IssueDetailModal({
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
                 isOpen
-                  ? "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400"
+                  ? "bg-emerald-500/12 text-emerald-400"
                   : "bg-muted text-muted-foreground"
               }`}
             >
               <span
                 className={`size-1.5 rounded-full ${
-                  isOpen ? "bg-emerald-500" : "bg-muted-foreground"
+                  isOpen ? "bg-emerald-400" : "bg-muted-foreground"
                 }`}
               />
               {issue.state}

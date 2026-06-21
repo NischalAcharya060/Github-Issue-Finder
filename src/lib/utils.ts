@@ -15,7 +15,7 @@ export const labelStyles: Record<string, string> = {
   "good first issue":
     "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
   "help wanted":
-    "bg-amber-500/12 text-amber-600 dark:text-amber-400 border-amber-500/25",
+    "bg-violet-500/12 text-violet-600 dark:text-violet-400 border-violet-500/25",
   beginner:
     "bg-teal-500/12 text-teal-600 dark:text-teal-400 border-teal-500/25",
   question:

@@ -23,8 +23,10 @@ import {
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { format } from "date-fns"
 import { LANGUAGES, ISSUE_STATES } from "@/lib/constants"
 import { LanguageIcon } from "@/components/shared/language-icon"
+import { DatePickerPopover } from "@/components/shared/date-picker-popover"
 import { cn } from "@/lib/utils"
 import type { FilterState } from "@/lib/types"
 
@@ -83,17 +85,25 @@ function DateInput({
   onChange: (v: string) => void
   placeholder: string
 }) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <div className="relative min-w-0 flex-1 overflow-hidden">
-      <Calendar className="pointer-events-none absolute left-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/40" />
-      <Input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-7 w-full pl-7 text-xs [color-scheme:var(--color-scheme)]"
-        placeholder={placeholder}
-      />
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <div className="relative min-w-0 flex-1">
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="flex h-7 w-full items-center rounded-lg border border-input bg-transparent pl-7 pr-2 text-xs text-left text-foreground transition-[color,box-shadow,border-color] outline-none hover:border-ring focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 placeholder:text-muted-foreground cursor-pointer"
+          >
+            {value ? format(new Date(value + "T00:00:00"), "MMM d, yyyy") : <span className="text-muted-foreground">{placeholder}</span>}
+          </button>
+        </PopoverTrigger>
+        <Calendar className="pointer-events-none absolute left-2 top-1/2 size-3 -translate-y-1/2 text-foreground/20 dark:text-foreground/80" />
+      </div>
+      <PopoverContent className="w-auto p-0" align="start">
+        <DatePickerPopover value={value} onChange={onChange} onClose={() => setOpen(false)} />
+      </PopoverContent>
+    </Popover>
   )
 }
 
