@@ -53,7 +53,7 @@ export function IssueDetailModal({
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto sm:max-w-2xl">
         <DialogHeader className="pr-8">
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-            <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 font-medium">
+            <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 font-medium text-foreground">
               <GitPullRequest className="size-3 text-muted-foreground" />
               {repo}
             </span>

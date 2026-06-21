@@ -204,7 +204,7 @@ export function SearchAnalytics({ issues }: SearchAnalyticsProps) {
           <div className="min-w-0 flex-1 space-y-1.5">
             {repoData.slice(0, 3).map((item) => (
               <div key={item.name} className="flex items-center justify-between text-[11px] gap-2">
-                <span className="truncate font-semibold text-foreground/80">{item.name}</span>
+                <span className="truncate font-semibold text-foreground">{item.name}</span>
                 <span className={`tabular-nums font-bold shrink-0 ${item.textColor}`}>
                   {Math.round(item.percent)}%
                 </span>
@@ -234,7 +234,7 @@ export function SearchAnalytics({ issues }: SearchAnalyticsProps) {
           ) : (
             labelData.map((item) => (
               <div key={item.name} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-foreground/80">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-foreground">
                   <span className="truncate max-w-[150px]">{item.name}</span>
                   <span className="tabular-nums text-muted-foreground font-bold">{item.count}</span>
                 </div>
@@ -277,7 +277,7 @@ export function SearchAnalytics({ issues }: SearchAnalyticsProps) {
             {ageData.groups.map((g) => (
               <div key={g.label} className="flex justify-between gap-1 border-b border-border/30 pb-0.5">
                 <span className="font-medium">{g.label}:</span>
-                <span className="tabular-nums font-bold text-foreground/80">{g.count}</span>
+                <span className="tabular-nums font-bold text-foreground">{g.count}</span>
               </div>
             ))}
           </div>

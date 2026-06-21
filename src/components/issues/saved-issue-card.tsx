@@ -199,7 +199,7 @@ export function SavedIssueCard({
               )}
 
               {item.note ? (
-                <div className="text-xs text-foreground/80 max-h-[100px] overflow-y-auto leading-relaxed pr-1 select-text">
+                <div className="text-xs text-foreground max-h-[100px] overflow-y-auto leading-relaxed pr-1 select-text">
                   <Markdown content={item.note} />
                 </div>
               ) : !item.prUrl ? (
