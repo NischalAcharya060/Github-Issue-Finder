@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
-const ACCENTS = ["blue", "emerald", "purple", "amber", "rose"] as const
+const ACCENTS = ["blue", "emerald", "purple", "amber", "rose", "slate", "indigo", "teal", "orange", "pink"] as const
 const THEMES = ["light", "dark", "system"] as const
 
 const preferenceSchema = z.object({

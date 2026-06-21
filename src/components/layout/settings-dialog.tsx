@@ -87,10 +87,15 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
 
   const accentOptions = [
     { id: "blue", label: "Blue", hex: "#58A6FF" },
-    { id: "emerald", label: "Emerald", hex: "#3FB950" },
+    { id: "indigo", label: "Indigo", hex: "#7C6FF7" },
     { id: "purple", label: "Purple", hex: "#BC8CFF" },
-    { id: "amber", label: "Amber", hex: "#D29922" },
+    { id: "pink", label: "Pink", hex: "#FF7BB8" },
     { id: "rose", label: "Rose", hex: "#FF7B72" },
+    { id: "orange", label: "Orange", hex: "#F0883E" },
+    { id: "amber", label: "Amber", hex: "#D29922" },
+    { id: "emerald", label: "Emerald", hex: "#3FB950" },
+    { id: "teal", label: "Teal", hex: "#56D4DD" },
+    { id: "slate", label: "Slate", hex: "#8B949E" },
   ]
 
   const handleSave = async () => {
@@ -285,7 +290,7 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
                   </SectionCard>
 
                   <SectionCard icon={Palette} iconColor="text-primary" title="Accent Color" description="Choose your primary accent color for buttons, links, and highlights.">
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                       {accentOptions.map((opt) => (
                         <button
                           key={opt.id}
