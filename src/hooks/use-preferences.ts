@@ -53,23 +53,26 @@ export function usePreferences() {
   useLayoutEffect(() => { applyTheme(theme) }, [theme])
   useLayoutEffect(() => { applyAccent(accent) }, [accent])
 
-  const setTheme = useCallback((value: string) => {
+  const setTheme = useCallback(async (value: string) => {
     setThemeState(value)
     saveLocal("theme", value)
     applyTheme(value)
     if (isAuthed) {
-      axios.put("/api/preferences", { theme: value }).catch((err) => {
+      // Await so callers (e.g. Save Settings) can ensure the DB write lands
+      // before reloading — otherwise the reload cancels the request and the
+      // stale DB value flashes back on rehydration.
+      await axios.put("/api/preferences", { theme: value }).catch((err) => {
         console.error("Failed to save theme preference:", err)
       })
     }
   }, [isAuthed])
 
-  const setAccent = useCallback((value: string) => {
+  const setAccent = useCallback(async (value: string) => {
     setAccentState(value)
     saveLocal("accent", value)
     applyAccent(value)
     if (isAuthed) {
-      axios.put("/api/preferences", { accent: value }).catch((err) => {
+      await axios.put("/api/preferences", { accent: value }).catch((err) => {
         console.error("Failed to save accent preference:", err)
       })
     }

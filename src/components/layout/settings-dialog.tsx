@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { toast } from "sonner"
 import { Palette, Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2, Eye, EyeOff, Sliders, Trash2, Ban, GitPullRequest, Sun, Moon } from "lucide-react"
 import {
   Dialog,
@@ -36,8 +37,13 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
   const [activeSubTab, setActiveSubTab] = useState<TabId>("appearance")
   const [showToken, setShowToken] = useState(false)
   const { ignoredRepos, removeIgnoredRepo, clear } = useIgnoredRepos()
-  const { theme, accent, setTheme, toggleTheme, setAccent } = usePreferences()
+  const { theme, accent, setTheme, setAccent } = usePreferences()
   const tabsRef = useRef<HTMLDivElement>(null)
+
+  // Staged appearance — selecting only updates the preview here; nothing is
+  // applied or persisted until the user clicks "Save Settings".
+  const [selectedTheme, setSelectedTheme] = useState(theme)
+  const [selectedAccent, setSelectedAccent] = useState(accent)
 
   const [token, setToken] = useState(() => {
     if (typeof window !== "undefined") {
@@ -98,16 +104,81 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
     { id: "slate", label: "Slate", hex: "#8B949E" },
   ]
 
+  const accentLabel = (id: string) =>
+    accentOptions.find((o) => o.id === id)?.label ?? id
+
+  // Toasts shown after a page reload (save/token flows reload the app, which
+  // would otherwise discard a toast fired right before it). Queue in
+  // sessionStorage and replay once on the next mount.
+  const queueToast = (type: "success" | "error", title: string, description?: string) => {
+    sessionStorage.setItem("settings-toast", JSON.stringify({ type, title, description }))
+  }
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("settings-toast")
+    if (!raw) return
+    sessionStorage.removeItem("settings-toast")
+    try {
+      const { type, title, description } = JSON.parse(raw)
+      toast[type === "error" ? "error" : "success"](title, description ? { description } : undefined)
+    } catch {
+      // ignore malformed queued toast
+    }
+  }, [])
+
+  // Re-sync staged appearance with the live values each time the dialog opens,
+  // so an unsaved selection from a previous (cancelled) session is discarded.
+  // Adjusting state during render (vs. an effect) is the React-recommended
+  // pattern for resetting state when a prop changes.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setSelectedTheme(theme)
+      setSelectedAccent(accent)
+    }
+  }
+
+  const appearanceChanged =
+    selectedTheme !== theme || selectedAccent !== accent
+
+  // Build the "what was saved" description, noting any appearance change.
+  const savedDescription = (base: string) => {
+    if (!appearanceChanged) return base
+    const bits: string[] = []
+    if (selectedTheme !== theme) bits.push(`${selectedTheme === "dark" ? "Dark" : "Light"} mode`)
+    if (selectedAccent !== accent) bits.push(`${accentLabel(selectedAccent)} accent`)
+    return `${bits.join(" & ")} applied. ${base}`
+  }
+
   const handleSave = async () => {
+    // Commit staged appearance — applies instantly and persists (DB + local).
+    // Await the DB writes so the upcoming reload doesn't cancel them and flash
+    // the stale value back after rehydration. Run sequentially: for a brand-new
+    // user the first write creates the preferences row and the second updates
+    // it, avoiding a parallel-create collision on the userId unique key.
+    if (selectedTheme !== theme) await setTheme(selectedTheme)
+    if (selectedAccent !== accent) await setAccent(selectedAccent)
+
     localStorage.setItem("developer-languages", JSON.stringify(languages))
     localStorage.setItem("developer-labels", JSON.stringify(labels))
     localStorage.setItem("developer-experience", experience)
 
     if (!token.trim()) {
+      const hadToken = !!localStorage.getItem("github-token")
       localStorage.removeItem("github-token")
       localStorage.removeItem("github-username")
       setStatus("idle")
       setUsername(null)
+      queueToast(
+        "success",
+        hadToken ? "Token removed & settings saved" : "Settings saved",
+        savedDescription(
+          hadToken
+            ? "You're back to anonymous access (60 requests/hr)."
+            : "Your preferences have been updated.",
+        ),
+      )
       if (onOpenChange) onOpenChange(false)
       window.location.reload()
       return
@@ -116,6 +187,11 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
     const savedToken = localStorage.getItem("github-token") || ""
     if (token.trim() === savedToken) {
       setStatus("success")
+      queueToast(
+        "success",
+        "Settings saved",
+        savedDescription("Your preferences have been updated."),
+      )
       setTimeout(() => {
         if (onOpenChange) onOpenChange(false)
         window.location.reload()
@@ -141,6 +217,11 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
       setIsTokenSaved(true)
       setStatus("success")
 
+      queueToast(
+        "success",
+        `Connected as ${login}`,
+        savedDescription("Token validated & saved — you now have 5,000 requests/hr."),
+      )
       setTimeout(() => {
         if (onOpenChange) onOpenChange(false)
         window.location.reload()
@@ -155,6 +236,7 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
         msg = err.message
       }
       setErrorMessage(msg)
+      toast.error("Token validation failed", { description: msg })
     }
   }
 
@@ -165,6 +247,11 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
     setStatus("idle")
     setUsername(null)
     setIsTokenSaved(false)
+    queueToast(
+      "success",
+      "Token removed",
+      "You're back to anonymous access (60 requests/hr).",
+    )
     setTimeout(() => {
       if (onOpenChange) onOpenChange(false)
       window.location.reload()
@@ -273,41 +360,41 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
               {/* Appearance */}
               {activeSubTab === "appearance" && (
                 <>
-                  <SectionCard icon={Sun} iconColor="text-primary" title="Theme" description="Switch between light and dark appearance.">
+                  <SectionCard icon={Sun} iconColor="text-primary" title="Theme" description="Switch between light and dark appearance. Applies when you save.">
                     <button
                       type="button"
-                      onClick={toggleTheme}
+                      onClick={() => setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")}
                       className="flex w-full items-center justify-between rounded-xl bg-background/50 p-3 border border-border/40 hover:border-border/80 transition-colors cursor-pointer"
                     >
                       <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                        {theme === "dark" ? <Moon className="size-4" /> : <Sun className="size-4" />}
-                        {theme === "dark" ? "Dark Mode" : "Light Mode"}
+                        {selectedTheme === "dark" ? <Moon className="size-4" /> : <Sun className="size-4" />}
+                        {selectedTheme === "dark" ? "Dark Mode" : "Light Mode"}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {theme === "dark" ? "On" : "Off"}
+                        {selectedTheme === "dark" ? "On" : "Off"}
                       </span>
                     </button>
                   </SectionCard>
 
-                  <SectionCard icon={Palette} iconColor="text-primary" title="Accent Color" description="Choose your primary accent color for buttons, links, and highlights.">
+                  <SectionCard icon={Palette} iconColor="text-primary" title="Accent Color" description="Choose your primary accent color for buttons, links, and highlights. Applies when you save.">
                     <div className="flex flex-wrap gap-3">
                       {accentOptions.map((opt) => (
                         <button
                           key={opt.id}
                           type="button"
-                          onClick={() => setAccent(opt.id)}
+                          onClick={() => setSelectedAccent(opt.id)}
                           className="flex flex-col items-center gap-1.5 cursor-pointer group"
                         >
                           <span
                             className={cn(
                               "size-8 rounded-full ring-2 ring-offset-2 ring-offset-background transition-all",
-                              accent === opt.id ? "ring-current" : "ring-transparent group-hover:ring-muted-foreground/30"
+                              selectedAccent === opt.id ? "ring-current" : "ring-transparent group-hover:ring-muted-foreground/30"
                             )}
                             style={{ backgroundColor: opt.hex, color: opt.hex }}
                           />
                           <span className={cn(
                             "text-[10px] font-medium",
-                            accent === opt.id ? "text-foreground" : "text-muted-foreground"
+                            selectedAccent === opt.id ? "text-foreground" : "text-muted-foreground"
                           )}>
                             {opt.label}
                           </span>
