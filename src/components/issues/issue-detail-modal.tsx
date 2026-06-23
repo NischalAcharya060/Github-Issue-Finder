@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getLabelStyle } from "@/lib/utils"
+import { useTheme } from "@/hooks/use-theme"
 import { Markdown } from "@/components/shared/markdown"
 import { IssueActions } from "@/components/issues/issue-actions"
 import type { GitHubIssue, GitHubLabel } from "@/lib/types"
@@ -41,6 +42,8 @@ export function IssueDetailModal({
   issues,
   onClose,
 }: IssueDetailModalProps) {
+  const { theme } = useTheme()
+  const isDark = theme === "dark"
   const issue = issueId ? issues.find((i) => i.id === issueId) : null
 
   if (!issue) return null
@@ -53,20 +56,20 @@ export function IssueDetailModal({
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto sm:max-w-2xl">
         <DialogHeader className="pr-8">
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-            <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 font-medium">
+            <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 font-medium text-foreground">
               <GitPullRequest className="size-3 text-muted-foreground" />
               {repo}
             </span>
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
                 isOpen
-                  ? "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400"
+                  ? "bg-emerald-500/12 text-emerald-400"
                   : "bg-muted text-muted-foreground"
               }`}
             >
               <span
                 className={`size-1.5 rounded-full ${
-                  isOpen ? "bg-emerald-500" : "bg-muted-foreground"
+                  isOpen ? "bg-emerald-400" : "bg-muted-foreground"
                 }`}
               />
               {issue.state}
@@ -90,7 +93,7 @@ export function IssueDetailModal({
         {issue.labels.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {issue.labels.map((label: GitHubLabel) => {
-              const labelStyle = getLabelStyle(label.name, label.color)
+              const labelStyle = getLabelStyle(label.name, label.color, isDark)
               return (
                 <Badge
                   key={label.id}

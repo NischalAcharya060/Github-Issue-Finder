@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { getLabelStyle, cn } from "@/lib/utils"
 import { ActionToggle } from "@/components/issues/action-toggle"
+import { useTheme } from "@/hooks/use-theme"
 import { usePatchSavedIssue } from "@/hooks/use-saved-issues"
 import { Markdown } from "@/components/shared/markdown"
 import type { SavedIssue } from "@/lib/types"
@@ -28,6 +29,8 @@ export function SavedIssueCard({
   pending,
 }: SavedIssueCardProps) {
   const patch = usePatchSavedIssue()
+  const { theme } = useTheme()
+  const isDark = theme === "dark"
   const [isEditing, setIsEditing] = useState(false)
   const [noteText, setNoteText] = useState(item.note || "")
   const [prUrlText, setPrUrlText] = useState(item.prUrl || "")
@@ -123,7 +126,7 @@ export function SavedIssueCard({
         {item.labels && item.labels.length > 0 && (
           <div className="mb-4 flex min-h-5 flex-wrap gap-1">
             {item.labels.slice(0, 3).map((label) => {
-              const labelStyle = getLabelStyle(label.name, label.color)
+              const labelStyle = getLabelStyle(label.name, label.color, isDark)
               return (
                 <Badge
                   key={label.name}
@@ -199,7 +202,7 @@ export function SavedIssueCard({
               )}
 
               {item.note ? (
-                <div className="text-xs text-foreground/80 max-h-[100px] overflow-y-auto leading-relaxed pr-1 select-text">
+                <div className="text-xs text-foreground max-h-[100px] overflow-y-auto leading-relaxed pr-1 select-text">
                   <Markdown content={item.note} />
                 </div>
               ) : !item.prUrl ? (

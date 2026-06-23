@@ -119,7 +119,7 @@ export function Markdown({ content }: MarkdownProps) {
     if (listItems.length === 0) return
     if (listType === "bullet") {
       elements.push(
-        <ul key={`list-${key}`} className="my-3 list-disc pl-6 space-y-1 text-sm text-foreground/90">
+        <ul key={`list-${key}`} className="my-3 list-disc pl-6 space-y-1 text-sm text-foreground">
           {listItems.map((item, idx) => (
             <li key={idx}>
               <InlineMarkdown text={item} />
@@ -129,7 +129,7 @@ export function Markdown({ content }: MarkdownProps) {
       )
     } else if (listType === "ordered") {
       elements.push(
-        <ol key={`list-${key}`} className="my-3 list-decimal pl-6 space-y-1 text-sm text-foreground/90">
+        <ol key={`list-${key}`} className="my-3 list-decimal pl-6 space-y-1 text-sm text-foreground">
           {listItems.map((item, idx) => (
             <li key={idx}>
               <InlineMarkdown text={item} />
@@ -254,7 +254,7 @@ export function Markdown({ content }: MarkdownProps) {
     // If it's none of the above, it's a paragraph
     flushList(i)
     elements.push(
-      <p key={`p-${i}`} className="my-2.5 text-sm leading-relaxed text-foreground/85">
+      <p key={`p-${i}`} className="my-2.5 text-sm leading-relaxed text-foreground">
         <InlineMarkdown text={line} />
       </p>
     )

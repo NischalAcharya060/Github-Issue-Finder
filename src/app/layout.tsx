@@ -62,8 +62,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#10b981" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c1512" },
+    { media: "(prefers-color-scheme: light)", color: "#3B82F6" },
+    { media: "(prefers-color-scheme: dark)", color: "#0D1117" },
   ],
 };
 
@@ -72,6 +72,10 @@ const themeScript = `
     const theme = localStorage.getItem("theme");
     if (theme === "dark" || (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
       document.documentElement.classList.add("dark");
+    }
+    const accent = localStorage.getItem("accent");
+    if (accent) {
+      document.documentElement.setAttribute("data-accent", accent);
     }
   } catch {} 
 `;
