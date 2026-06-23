@@ -36,8 +36,21 @@ function getTextColorForBackground(hexColor: string): string {
   return luminance > 0.5 ? "#000" : "#fff"
 }
 
-export function getLabelStyle(name: string, hexColor: string): LabelStyle {
+export function getLabelStyle(
+  name: string,
+  hexColor: string,
+  isDark?: boolean,
+): LabelStyle {
   const cleanColor = hexColor.startsWith("#") ? hexColor : `#${hexColor}`
+  // When a theme is provided, the label text color follows the theme
+  // (white in dark mode, black in light mode) regardless of the label's
+  // background color. Falls back to luminance-based contrast otherwise.
+  const textColor =
+    isDark === undefined
+      ? getTextColorForBackground(cleanColor)
+      : isDark
+        ? "#fff"
+        : "#000"
   const lower = name.toLowerCase()
   if (labelStyles[lower]) {
     const cleaned = labelStyles[lower]
@@ -46,7 +59,7 @@ export function getLabelStyle(name: string, hexColor: string): LabelStyle {
       .join(" ")
     return {
       className: cleaned,
-      style: { color: getTextColorForBackground(cleanColor) },
+      style: { color: textColor },
     }
   }
   return {
@@ -54,7 +67,7 @@ export function getLabelStyle(name: string, hexColor: string): LabelStyle {
     style: {
       backgroundColor: `${cleanColor}1c`,
       borderColor: `${cleanColor}40`,
-      color: getTextColorForBackground(cleanColor),
+      color: textColor,
     },
   }
 }

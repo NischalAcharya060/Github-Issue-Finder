@@ -11,6 +11,7 @@ import { getLabelStyle, cn } from "@/lib/utils"
 import { IssueActions } from "@/components/issues/issue-actions"
 import { useSavedIssuesMap } from "@/hooks/use-saved-issues"
 import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
+import { useTheme } from "@/hooks/use-theme"
 import type { GitHubIssue } from "@/lib/types"
 
 function getRepoFromUrl(url: string): string {
@@ -28,6 +29,8 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
   const { map } = useSavedIssuesMap()
   const isDone = map.get(issue.id)?.done ?? false
   const { addIgnoredRepo } = useIgnoredRepos()
+  const { theme } = useTheme()
+  const isDark = theme === "dark"
 
   return (
     <div className="group relative h-full">
@@ -111,7 +114,7 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
         {issue.labels.length > 0 && (
           <div className="mb-4 flex min-h-5 flex-wrap gap-1">
             {issue.labels.slice(0, 4).map((label) => {
-              const labelStyle = getLabelStyle(label.name, label.color)
+              const labelStyle = getLabelStyle(label.name, label.color, isDark)
               return (
                 <Badge
                   key={label.id}

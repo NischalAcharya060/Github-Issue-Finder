@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getLabelStyle } from "@/lib/utils"
+import { useTheme } from "@/hooks/use-theme"
 import { Markdown } from "@/components/shared/markdown"
 import { IssueActions } from "@/components/issues/issue-actions"
 import type { GitHubIssue, GitHubLabel } from "@/lib/types"
@@ -41,6 +42,8 @@ export function IssueDetailModal({
   issues,
   onClose,
 }: IssueDetailModalProps) {
+  const { theme } = useTheme()
+  const isDark = theme === "dark"
   const issue = issueId ? issues.find((i) => i.id === issueId) : null
 
   if (!issue) return null
@@ -90,7 +93,7 @@ export function IssueDetailModal({
         {issue.labels.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {issue.labels.map((label: GitHubLabel) => {
-              const labelStyle = getLabelStyle(label.name, label.color)
+              const labelStyle = getLabelStyle(label.name, label.color, isDark)
               return (
                 <Badge
                   key={label.id}
