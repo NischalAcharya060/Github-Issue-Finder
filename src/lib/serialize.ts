@@ -1,4 +1,4 @@
-import type { SavedIssue } from "@/lib/types"
+import type { SavedIssue, SavedRepo } from "@/lib/types"
 
 /** Raw Prisma SavedIssue row (issueId is BigInt, dates are Date). */
 interface PrismaSavedIssue {
@@ -18,6 +18,39 @@ interface PrismaSavedIssue {
   prUrl?: string | null
   createdAt: Date
   updatedAt: Date
+}
+
+/** Raw Prisma SavedRepo row (dates are Date). */
+interface PrismaSavedRepo {
+  id: string
+  userId: string
+  repoFullName: string
+  name: string
+  owner: string
+  htmlUrl: string
+  description: string | null
+  language: string | null
+  stargazersCount: number
+  forksCount: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** Convert a Prisma SavedRepo row into a JSON-safe SavedRepo (Date -> ISO). */
+export function serializeSavedRepo(row: PrismaSavedRepo): SavedRepo {
+  return {
+    id: row.id,
+    repoFullName: row.repoFullName,
+    name: row.name,
+    owner: row.owner,
+    htmlUrl: row.htmlUrl,
+    description: row.description,
+    language: row.language,
+    stargazersCount: row.stargazersCount,
+    forksCount: row.forksCount,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  }
 }
 
 /** Convert a Prisma SavedIssue row into a JSON-safe SavedIssue (BigInt -> number, Date -> ISO). */

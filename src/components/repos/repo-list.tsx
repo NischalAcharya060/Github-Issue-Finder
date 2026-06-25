@@ -1,18 +1,29 @@
 "use client"
 
 import Link from "next/link"
-import { Star, GitFork, ExternalLink, Code2, AlertTriangle, EyeOff } from "lucide-react"
+import { signIn, useSession } from "next-auth/react"
+import {
+  Star,
+  GitFork,
+  ExternalLink,
+  Code2,
+  AlertTriangle,
+  EyeOff,
+  Bookmark,
+  Loader2,
+} from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatePanel } from "@/components/shared/state-panel"
 import { Stagger, StaggerItem } from "@/components/motion/motion-primitives"
 import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
+import { useSavedReposMap, useToggleSaveRepo } from "@/hooks/use-saved-repos"
 import type { RepoSearchResponse, GitHubRepo } from "@/lib/types"
 
 interface RepoListProps {
   data: RepoSearchResponse | undefined
   isLoading: boolean
   isError: boolean
-  onRepoClick: (owner: string, repo: string) => void
+  onRepoClick: (repo: GitHubRepo) => void
 }
 
 export function RepoList({ data, isLoading, isError, onRepoClick }: RepoListProps) {
@@ -65,10 +76,7 @@ export function RepoList({ data, isLoading, isError, onRepoClick }: RepoListProp
         <StaggerItem key={repo.id}>
           <RepoCard
             repo={repo}
-            onClick={() => {
-              const [owner, name] = repo.full_name.split("/")
-              onRepoClick(owner, name)
-            }}
+            onClick={() => onRepoClick(repo)}
           />
         </StaggerItem>
       ))}
@@ -83,6 +91,20 @@ interface RepoCardProps {
 
 function RepoCard({ repo, onClick }: RepoCardProps) {
   const { addIgnoredRepo } = useIgnoredRepos()
+  const { status } = useSession()
+  const { map } = useSavedReposMap()
+  const toggle = useToggleSaveRepo()
+  const isSaved = map.has(repo.full_name)
+  const savePending = toggle.isPending && toggle.variables?.repo.full_name === repo.full_name
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (status !== "authenticated") {
+      signIn("github")
+      return
+    }
+    toggle.mutate({ repo, saved: !isSaved })
+  }
 
   return (
     <div className="group relative h-full">
@@ -96,6 +118,23 @@ function RepoCard({ repo, onClick }: RepoCardProps) {
             {repo.full_name}
           </span>
           <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={handleSave}
+              disabled={savePending}
+              className={`transition-all cursor-pointer ${
+                isSaved
+                  ? "text-primary opacity-100"
+                  : "text-muted-foreground opacity-0 group-hover:opacity-100"
+              } hover:text-primary`}
+              title={isSaved ? "Remove from saved" : "Save repository"}
+              aria-label={isSaved ? "Remove from saved" : "Save repository"}
+            >
+              {savePending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Bookmark className={`size-3.5 ${isSaved ? "fill-primary" : ""}`} />
+              )}
+            </button>
             <button
               onClick={(e) => {
                 e.stopPropagation()

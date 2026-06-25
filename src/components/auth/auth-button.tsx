@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { signIn, signOut, useSession } from "next-auth/react"
-import { GitBranch, LogOut, Bookmark, CircleUserRound, Loader2 } from "lucide-react"
+import { GitBranch, LogOut, Bookmark, BookOpen, CircleUserRound, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -77,6 +77,12 @@ export function AuthButton() {
           <Link href="/my-issues" className="cursor-pointer gap-2">
             <Bookmark className="size-4" />
             My Issues
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/my-repos" className="cursor-pointer gap-2">
+            <BookOpen className="size-4" />
+            My Repos
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

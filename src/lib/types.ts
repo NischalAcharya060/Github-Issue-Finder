@@ -101,6 +101,20 @@ export interface FilterState {
 
 export type SearchMode = "keyword" | "repo" | "org"
 
+export interface SavedRepo {
+  id: string
+  repoFullName: string
+  name: string
+  owner: string
+  htmlUrl: string
+  description: string | null
+  language: string | null
+  stargazersCount: number
+  forksCount: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface SavedIssue {
   id: string
   issueId: number

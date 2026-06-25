@@ -31,7 +31,7 @@ import { useHotkey } from "@/hooks/use-hotkey"
 import { ForYouFeed } from "@/components/dashboard/for-you-feed"
 import { TrendingFeed } from "@/components/dashboard/trending-feed"
 import { SearchAnalytics } from "@/components/dashboard/search-analytics"
-import type { SearchMode, FilterState, SortOption, EntityType, SearchResponse, RepoSearchResponse, GitHubIssue } from "@/lib/types"
+import type { SearchMode, FilterState, SortOption, EntityType, SearchResponse, RepoSearchResponse, GitHubIssue, GitHubRepo } from "@/lib/types"
 
 const defaultFilters: FilterState = {
   language: "all",
@@ -57,7 +57,7 @@ export default function Home() {
   const [page, setPage] = useState(1)
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
   const [selectedIssue, setSelectedIssue] = useState<number | null>(null)
-  const [selectedRepo, setSelectedRepo] = useState<{ owner: string; repo: string } | null>(null)
+  const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null)
   const [repoIssues, setRepoIssues] = useState<GitHubIssue[] | null>(null)
   const [repoIssuesLoading, setRepoIssuesLoading] = useState(false)
   const [repoIssuesError, setRepoIssuesError] = useState(false)
@@ -120,13 +120,13 @@ export default function Home() {
   }, [])
 
   const handleRepoClick = useCallback(
-    async (owner: string, repo: string) => {
-      setSelectedRepo({ owner, repo })
+    async (repo: GitHubRepo) => {
+      setSelectedRepo(repo)
       setRepoIssues(null)
       setRepoIssuesLoading(true)
       setRepoIssuesError(false)
       try {
-        const issues = await getRepoIssues(owner, repo)
+        const issues = await getRepoIssues(repo.owner.login, repo.name)
         setRepoIssues(issues)
       } catch {
         setRepoIssuesError(true)
@@ -308,8 +308,7 @@ export default function Home() {
 
       {selectedRepo && (
         <RepoIssuesModal
-          owner={selectedRepo.owner}
-          repo={selectedRepo.repo}
+          repo={selectedRepo}
           issues={repoIssues}
           isLoading={repoIssuesLoading}
           isError={repoIssuesError}
