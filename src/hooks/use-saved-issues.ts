@@ -101,7 +101,6 @@ export function useToggleIssue() {
         } else if (expectedSaved !== undefined) {
           if (expectedSaved === false) {
             expectedStatus = "BACKLOG"
-            expectedDone = false
           }
         }
 

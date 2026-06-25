@@ -92,7 +92,6 @@ export async function POST(req: Request) {
   } else if (finalSaved !== undefined) {
     if (finalSaved === false) {
       finalStatus = "BACKLOG"
-      finalDone = false
     }
   }
 
