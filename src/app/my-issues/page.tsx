@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useCallback } from "react"
 import Link from "next/link"
 import { useSession, signIn } from "next-auth/react"
+import { toast } from "sonner"
 import { GitBranch, Bookmark, CheckCircle2, LogIn, ArrowLeft, Kanban, List, AlertCircle, Eye, EyeOff, Zap, Search, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
@@ -11,6 +12,7 @@ import { StatePanel } from "@/components/shared/state-panel"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SavedIssueCard } from "@/components/issues/saved-issue-card"
 import { Stagger, StaggerItem } from "@/components/motion/motion-primitives"
+import { ConfirmDialog } from "@/components/shared/confirm-dialog"
 import { cn } from "@/lib/utils"
 import {
   useSavedIssues,
@@ -32,6 +34,50 @@ export default function MyIssuesPage() {
   const remove = useRemoveSavedIssue()
 
   const pending = patch.isPending || remove.isPending
+  const [confirmRemove, setConfirmRemove] = useState<SavedIssue | null>(null)
+
+  const handleToggleSaved = useCallback((it: SavedIssue) => {
+    patch.mutate(
+      { issueId: it.issueId, saved: !it.saved },
+      {
+        onSuccess: (res) => {
+          toast.success(res.saved ? "Issue saved" : "Bookmark removed")
+        },
+        onError: () => {
+          toast.error("Failed to update issue")
+        },
+      }
+    )
+  }, [patch])
+
+  const handleToggleDone = useCallback((it: SavedIssue) => {
+    patch.mutate(
+      { issueId: it.issueId, done: !it.done },
+      {
+        onSuccess: (res) => {
+          toast.success(res.done ? "Marked as done" : "Marked as not done")
+        },
+        onError: () => {
+          toast.error("Failed to update issue")
+        },
+      }
+    )
+  }, [patch])
+
+  const handleConfirmRemove = useCallback(() => {
+    if (!confirmRemove) return
+    remove.mutate(confirmRemove.issueId, {
+      onSuccess: () => {
+        toast.success("Issue removed", {
+          description: `#${confirmRemove.number} has been removed from your issues.`,
+        })
+        setConfirmRemove(null)
+      },
+      onError: () => {
+        toast.error("Failed to remove issue")
+      },
+    })
+  }, [confirmRemove, remove])
 
   const { saved, done, backlog, inProgress, inReview, completed } = useMemo(() => {
     const all = data ?? []
@@ -237,13 +283,9 @@ export default function MyIssuesPage() {
                                   item={item}
                                   pending={pending}
                                   detailView={detailView}
-                                  onToggleSaved={(it) =>
-                                    patch.mutate({ issueId: it.issueId, saved: !it.saved })
-                                  }
-                                  onToggleDone={(it) =>
-                                    patch.mutate({ issueId: it.issueId, done: !it.done })
-                                  }
-                                  onRemove={(it) => remove.mutate(it.issueId)}
+                                  onToggleSaved={handleToggleSaved}
+                                  onToggleDone={handleToggleDone}
+                                  onRemove={(it) => setConfirmRemove(it)}
                                 />
                               </StaggerItem>
                             ))}
@@ -321,13 +363,9 @@ export default function MyIssuesPage() {
                           item={item}
                           pending={pending}
                           detailView={detailView}
-                          onToggleSaved={(it) =>
-                            patch.mutate({ issueId: it.issueId, saved: !it.saved })
-                          }
-                          onToggleDone={(it) =>
-                            patch.mutate({ issueId: it.issueId, done: !it.done })
-                          }
-                          onRemove={(it) => remove.mutate(it.issueId)}
+                          onToggleSaved={handleToggleSaved}
+                          onToggleDone={handleToggleDone}
+                          onRemove={(it) => setConfirmRemove(it)}
                         />
                       </StaggerItem>
                     ))}
@@ -338,6 +376,20 @@ export default function MyIssuesPage() {
           </>
         )}
       </main>
+
+      <ConfirmDialog
+        open={!!confirmRemove}
+        onOpenChange={(open) => { if (!open) setConfirmRemove(null) }}
+        title="Remove issue?"
+        description={
+          confirmRemove
+            ? `"#${confirmRemove.number} ${confirmRemove.title}" will be removed from your issues.`
+            : ""
+        }
+        confirmLabel="Remove"
+        onConfirm={handleConfirmRemove}
+        isLoading={remove.isPending}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useSession, signIn } from "next-auth/react"
+import { toast } from "sonner"
 import { GitBranch, Bookmark, LogIn, ArrowLeft, Star, GitFork, ExternalLink, Trash2, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
@@ -10,6 +11,7 @@ import { AuthButton } from "@/components/auth/auth-button"
 import { StatePanel } from "@/components/shared/state-panel"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Stagger, StaggerItem } from "@/components/motion/motion-primitives"
+import { ConfirmDialog } from "@/components/shared/confirm-dialog"
 import { RepoIssuesModal } from "@/components/repos/repo-issues-modal"
 import { useSavedRepos, useToggleSaveRepo } from "@/hooks/use-saved-repos"
 import { getRepoIssues } from "@/lib/github-api"
@@ -25,6 +27,40 @@ export default function MyReposPage() {
   const [repoIssues, setRepoIssues] = useState<GitHubIssue[] | null>(null)
   const [issuesLoading, setIssuesLoading] = useState(false)
   const [issuesError, setIssuesError] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<SavedRepo | null>(null)
+
+  const handleConfirmDelete = () => {
+    if (!confirmDelete) return
+    toggle.mutate(
+      {
+        repo: {
+          id: 0,
+          name: confirmDelete.name,
+          full_name: confirmDelete.repoFullName,
+          html_url: confirmDelete.htmlUrl,
+          description: confirmDelete.description,
+          language: confirmDelete.language,
+          stargazers_count: confirmDelete.stargazersCount,
+          forks_count: confirmDelete.forksCount,
+          owner: { login: confirmDelete.owner, id: 0, avatar_url: "", html_url: "" },
+        },
+        saved: false,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Repository removed", {
+            description: `${confirmDelete.repoFullName} has been removed from your saved repos.`,
+          })
+          setConfirmDelete(null)
+        },
+        onError: () => {
+          toast.error("Failed to remove repository", {
+            description: "Something went wrong. Please try again.",
+          })
+        },
+      }
+    )
+  }
 
   const handleRepoClick = async (item: SavedRepo) => {
     const repo: GitHubRepo = {
@@ -136,22 +172,7 @@ export default function MyReposPage() {
                       <SavedRepoCard
                         item={item}
                         onClick={() => handleRepoClick(item)}
-                        onRemove={() =>
-                          toggle.mutate({
-                            repo: {
-                              id: 0,
-                              name: item.name,
-                              full_name: item.repoFullName,
-                              html_url: item.htmlUrl,
-                              description: item.description,
-                              language: item.language,
-                              stargazers_count: item.stargazersCount,
-                              forks_count: item.forksCount,
-                              owner: { login: item.owner, id: 0, avatar_url: "", html_url: "" },
-                            },
-                            saved: false,
-                          })
-                        }
+                        onRemove={() => setConfirmDelete(item)}
                         isRemoving={isRemoving}
                       />
                     </StaggerItem>
@@ -172,6 +193,20 @@ export default function MyReposPage() {
           onClose={() => setSelectedRepo(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onOpenChange={(open) => { if (!open) setConfirmDelete(null) }}
+        title="Remove repository?"
+        description={
+          confirmDelete
+            ? `"${confirmDelete.repoFullName}" will be removed from your saved repos.`
+            : ""
+        }
+        confirmLabel="Remove"
+        onConfirm={handleConfirmDelete}
+        isLoading={toggle.isPending}
+      />
     </div>
   )
 }
