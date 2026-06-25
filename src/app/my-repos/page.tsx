@@ -67,6 +67,11 @@ export default function MyReposPage() {
           <span className="text-sm font-semibold text-muted-foreground">/ My Repos</span>
           <div className="ml-auto flex items-center gap-1.5">
             <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground cursor-pointer">
+              <Link href="/my-issues">
+                <span className="hidden sm:inline">My Issues</span>
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground cursor-pointer">
               <Link href="/">
                 <ArrowLeft className="size-3.5" />
                 <span className="hidden sm:inline">Search</span>
@@ -119,36 +124,39 @@ export default function MyReposPage() {
                 description="Save repositories from search results to find them here."
               >
                 <Button variant="outline" asChild className="cursor-pointer">
-                  <Link href="/">Browse repos</Link>
+                  <Link href="/">Browse on home</Link>
                 </Button>
               </StatePanel>
             ) : (
               <Stagger stagger={0.04} className="grid gap-4 sm:grid-cols-2">
-                {data.map((item: SavedRepo) => (
-                  <StaggerItem key={item.id} className="h-full">
-                    <SavedRepoCard
-                      item={item}
-                      onClick={() => handleRepoClick(item)}
-                      onRemove={() =>
-                        toggle.mutate({
-                          repo: {
-                            id: 0,
-                            name: item.name,
-                            full_name: item.repoFullName,
-                            html_url: item.htmlUrl,
-                            description: item.description,
-                            language: item.language,
-                            stargazers_count: item.stargazersCount,
-                            forks_count: item.forksCount,
-                            owner: { login: item.owner, id: 0, avatar_url: "", html_url: "" },
-                          },
-                          saved: false,
-                        })
-                      }
-                      pending={toggle.isPending}
-                    />
-                  </StaggerItem>
-                ))}
+                {data.map((item: SavedRepo) => {
+                  const isRemoving = toggle.isPending && toggle.variables?.repo.full_name === item.repoFullName && !toggle.variables?.saved
+                  return (
+                    <StaggerItem key={item.id} className="h-full">
+                      <SavedRepoCard
+                        item={item}
+                        onClick={() => handleRepoClick(item)}
+                        onRemove={() =>
+                          toggle.mutate({
+                            repo: {
+                              id: 0,
+                              name: item.name,
+                              full_name: item.repoFullName,
+                              html_url: item.htmlUrl,
+                              description: item.description,
+                              language: item.language,
+                              stargazers_count: item.stargazersCount,
+                              forks_count: item.forksCount,
+                              owner: { login: item.owner, id: 0, avatar_url: "", html_url: "" },
+                            },
+                            saved: false,
+                          })
+                        }
+                        isRemoving={isRemoving}
+                      />
+                    </StaggerItem>
+                  )
+                })}
               </Stagger>
             )}
           </>
@@ -172,10 +180,10 @@ interface SavedRepoCardProps {
   item: SavedRepo
   onClick: () => void
   onRemove: () => void
-  pending?: boolean
+  isRemoving?: boolean
 }
 
-function SavedRepoCard({ item, onClick, onRemove, pending }: SavedRepoCardProps) {
+function SavedRepoCard({ item, onClick, onRemove, isRemoving }: SavedRepoCardProps) {
   return (
     <div className="group relative h-full">
       <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -220,7 +228,7 @@ function SavedRepoCard({ item, onClick, onRemove, pending }: SavedRepoCardProps)
         <div className="border-t border-border/50 px-4 py-2 flex items-center justify-between">
           <button
             onClick={onRemove}
-            disabled={pending}
+            disabled={isRemoving}
             className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
           >
             <Trash2 className="size-3" />

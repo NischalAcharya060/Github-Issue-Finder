@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useSession, signIn } from "next-auth/react"
-import { GitBranch, Bookmark, CheckCircle2, LogIn, ArrowLeft, Kanban, List, AlertCircle } from "lucide-react"
+import { GitBranch, Bookmark, CheckCircle2, LogIn, ArrowLeft, Kanban, List, AlertCircle, Eye, EyeOff, Zap, Search, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { AuthButton } from "@/components/auth/auth-button"
@@ -26,6 +26,7 @@ export default function MyIssuesPage() {
   const { status } = useSession()
   const [tab, setTab] = useState<Tab>("saved")
   const [viewMode, setViewMode] = useState<ViewMode>("board")
+  const [detailView, setDetailView] = useState(true)
   const { data, isLoading } = useSavedIssues("all")
   const patch = usePatchSavedIssue()
   const remove = useRemoveSavedIssue()
@@ -53,10 +54,10 @@ export default function MyIssuesPage() {
   ]
 
   const kanbanColumns = [
-    { id: "BACKLOG", title: "Saved (Backlog)", icon: "📋", items: backlog, borderClass: "border-t-muted-foreground/30", bgAccent: "bg-muted/10" },
-    { id: "IN_PROGRESS", title: "In Progress", icon: "⚡", items: inProgress, borderClass: "border-t-amber-500/40", bgAccent: "bg-amber-500/[0.01]" },
-    { id: "IN_REVIEW", title: "In Review", icon: "🔍", items: inReview, borderClass: "border-t-blue-500/40", bgAccent: "bg-blue-500/[0.01]" },
-    { id: "DONE", title: "Completed", icon: "🎉", items: completed, borderClass: "border-t-emerald-500/40", bgAccent: "bg-emerald-500/[0.01]" },
+    { id: "BACKLOG", title: "Saved", icon: Bookmark, items: backlog, accent: "text-muted-foreground", barClass: "bg-muted-foreground/30", dotClass: "bg-muted-foreground/50", badgeClass: "bg-muted-foreground/10 text-muted-foreground" },
+    { id: "IN_PROGRESS", title: "In Progress", icon: Zap, items: inProgress, accent: "text-amber-500", barClass: "bg-amber-500/40", dotClass: "bg-amber-500", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
+    { id: "IN_REVIEW", title: "In Review", icon: Search, items: inReview, accent: "text-blue-500", barClass: "bg-blue-500/40", dotClass: "bg-blue-500", badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
+    { id: "DONE", title: "Completed", icon: CheckCircle2, items: completed, accent: "text-emerald-500", barClass: "bg-emerald-500/40", dotClass: "bg-emerald-500", badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
   ]
 
   return (
@@ -73,6 +74,11 @@ export default function MyIssuesPage() {
           </Link>
           <span className="text-sm font-semibold text-muted-foreground">/ My Issues</span>
           <div className="ml-auto flex items-center gap-1.5">
+            <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground cursor-pointer">
+              <Link href="/my-repos">
+                <span className="hidden sm:inline">My Repos</span>
+              </Link>
+            </Button>
             <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground cursor-pointer">
               <Link href="/">
                 <ArrowLeft className="size-3.5" />
@@ -108,31 +114,46 @@ export default function MyIssuesPage() {
                 </p>
               </div>
 
-              {/* Toggle View Mode */}
-              <div className="inline-flex items-center gap-1 rounded-xl bg-secondary/60 p-1 ring-1 ring-border/60 shrink-0 self-start sm:self-auto">
+              {/* Toggle View Mode & Detail */}
+              <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                <div className="inline-flex items-center gap-1 rounded-xl bg-secondary/60 p-1 ring-1 ring-border/60">
+                  <button
+                    onClick={() => setViewMode("board")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
+                      viewMode === "board"
+                        ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Kanban className="size-3.5" />
+                    Kanban Board
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
+                      viewMode === "list"
+                        ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <List className="size-3.5" />
+                    List View
+                  </button>
+                </div>
                 <button
-                  onClick={() => setViewMode("board")}
+                  onClick={() => setDetailView((v) => !v)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
-                    viewMode === "board"
-                      ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
-                      : "text-muted-foreground hover:text-foreground"
+                    "inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer border",
+                    detailView
+                      ? "bg-background text-foreground shadow-sm border-border/60"
+                      : "bg-secondary/60 text-muted-foreground hover:text-foreground border-transparent"
                   )}
+                  title={detailView ? "Show minimal cards" : "Show full details"}
                 >
-                  <Kanban className="size-3.5" />
-                  Kanban Board
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
-                    viewMode === "list"
-                      ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <List className="size-3.5" />
-                  List View
+                  {detailView ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                  {detailView ? "Minimal" : "Details"}
                 </button>
               </div>
             </div>
@@ -170,54 +191,76 @@ export default function MyIssuesPage() {
             ) : viewMode === "board" ? (
               /* Kanban Board View */
               <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 items-start select-none">
-                {kanbanColumns.map((col) => (
-                  <div
-                    key={col.id}
-                    className={cn(
-                      "flex flex-col rounded-2xl border border-border/80 p-3.5 shadow-sm max-h-[80vh] min-h-[500px]",
-                      col.bgAccent
-                    )}
-                  >
-                    {/* Column Header */}
-                    <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-2">
-                      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        <span className="text-sm">{col.icon}</span>
-                        {col.title}
-                      </span>
-                      <span className="rounded-full bg-secondary/80 border px-2 py-0.5 text-[10px] font-bold tabular-nums">
-                        {col.items.length}
-                      </span>
-                    </div>
+                {kanbanColumns.map((col) => {
+                  const Icon = col.icon
+                  return (
+                    <div
+                      key={col.id}
+                      className="flex flex-col rounded-2xl border border-border/80 bg-card/30 shadow-sm shadow-foreground/[0.02] ring-1 ring-foreground/[0.03] backdrop-blur-sm max-h-[80vh] min-h-[500px] overflow-hidden"
+                    >
+                      {/* Color-coded accent bar */}
+                      <div className={cn("h-1 shrink-0", col.barClass)} />
 
-                    {/* Column Items */}
-                    <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-[300px]">
-                      {col.items.length === 0 ? (
-                        <div className="flex h-36 flex-col items-center justify-center rounded-xl border border-dashed border-border/80 p-4 text-center">
-                          <AlertCircle className="size-4.5 text-muted-foreground/30 mb-2" />
-                          <span className="text-[10px] text-muted-foreground/50 font-medium">No issues in this stage</span>
+                      {/* Column Header */}
+                      <div className="flex items-center justify-between px-4 pt-3 pb-2.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Icon className={cn("size-4 shrink-0", col.accent)} />
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/80 truncate">
+                            {col.title}
+                          </h3>
                         </div>
-                      ) : (
-                        <Stagger stagger={0.03} className="space-y-4">
-                          {col.items.map((item: SavedIssue) => (
-                            <StaggerItem key={item.id}>
-                              <SavedIssueCard
-                                item={item}
-                                pending={pending}
-                                onToggleSaved={(it) =>
-                                  patch.mutate({ issueId: it.issueId, saved: !it.saved })
-                                }
-                                onToggleDone={(it) =>
-                                  patch.mutate({ issueId: it.issueId, done: !it.done })
-                                }
-                                onRemove={(it) => remove.mutate(it.issueId)}
-                              />
-                            </StaggerItem>
-                          ))}
-                        </Stagger>
-                      )}
+                        <div className={cn("flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums shrink-0", col.badgeClass)}>
+                          <span className={cn("size-1.5 rounded-full", col.dotClass)} />
+                          {col.items.length}
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="mx-4 border-t border-border/50" />
+
+                      {/* Column Items */}
+                      <div className="flex-1 overflow-y-auto space-y-3 px-3 py-3 min-h-[260px] scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
+                        {col.items.length === 0 ? (
+                          <div className="flex h-32 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 p-4 text-center gap-2">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-muted/40">
+                              <Plus className="size-4 text-muted-foreground/40" />
+                            </div>
+                            <span className="text-[11px] text-muted-foreground/40 font-medium leading-tight">
+                              No issues yet
+                            </span>
+                          </div>
+                        ) : (
+                          <Stagger stagger={0.03} className="space-y-3">
+                            {col.items.map((item: SavedIssue) => (
+                              <StaggerItem key={item.id}>
+                                <SavedIssueCard
+                                  item={item}
+                                  pending={pending}
+                                  detailView={detailView}
+                                  onToggleSaved={(it) =>
+                                    patch.mutate({ issueId: it.issueId, saved: !it.saved })
+                                  }
+                                  onToggleDone={(it) =>
+                                    patch.mutate({ issueId: it.issueId, done: !it.done })
+                                  }
+                                  onRemove={(it) => remove.mutate(it.issueId)}
+                                />
+                              </StaggerItem>
+                            ))}
+                          </Stagger>
+                        )}
+                      </div>
+
+                      {/* Column footer with count */}
+                      <div className="shrink-0 border-t border-border/40 px-4 py-2">
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 font-medium">
+                          <div className={cn("size-1.5 rounded-full", col.dotClass)} />
+                          {col.items.length} {col.items.length === 1 ? "issue" : "issues"}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               /* List View (Original Tabs) */
@@ -277,6 +320,7 @@ export default function MyIssuesPage() {
                         <SavedIssueCard
                           item={item}
                           pending={pending}
+                          detailView={detailView}
                           onToggleSaved={(it) =>
                             patch.mutate({ issueId: it.issueId, saved: !it.saved })
                           }
