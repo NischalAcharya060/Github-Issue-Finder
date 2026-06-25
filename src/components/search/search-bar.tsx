@@ -1,14 +1,13 @@
 "use client"
 
 import React from "react"
-import { Search, BookOpen, Building2, Hash } from "lucide-react"
+import { Search, Building2, Hash } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { SegmentedControl } from "@/components/shared/segmented-control"
 import type { SearchMode } from "@/lib/types"
 
 const modeOptions: { value: SearchMode; label: string; icon: typeof Hash }[] = [
   { value: "keyword", label: "Keyword", icon: Hash },
-  { value: "repo", label: "Repo", icon: BookOpen },
   { value: "org", label: "Org", icon: Building2 },
 ]
 
@@ -45,9 +44,7 @@ export function SearchBar({
           placeholder={
             mode === "keyword"
               ? "Search issues by keyword…"
-              : mode === "repo"
-                ? "Search by repository (e.g. owner/repo)…"
-                : "Search by organization (e.g. vercel)…"
+              : "Search by organization (e.g. vercel)…"
           }
           className="h-9 rounded-xl border-transparent bg-secondary/60 pr-16 pl-9 text-sm shadow-sm ring-1 ring-border/60 transition-all hover:ring-border focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/40"
         />

@@ -12,9 +12,10 @@ interface RepoListProps {
   data: RepoSearchResponse | undefined
   isLoading: boolean
   isError: boolean
+  onRepoClick: (owner: string, repo: string) => void
 }
 
-export function RepoList({ data, isLoading, isError }: RepoListProps) {
+export function RepoList({ data, isLoading, isError, onRepoClick }: RepoListProps) {
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2">
@@ -62,35 +63,45 @@ export function RepoList({ data, isLoading, isError }: RepoListProps) {
     <Stagger stagger={0.05} className="grid gap-4 sm:grid-cols-2">
       {data.items.map((repo: GitHubRepo) => (
         <StaggerItem key={repo.id}>
-          <RepoCard repo={repo} />
+          <RepoCard
+            repo={repo}
+            onClick={() => {
+              const [owner, name] = repo.full_name.split("/")
+              onRepoClick(owner, name)
+            }}
+          />
         </StaggerItem>
       ))}
     </Stagger>
   )
 }
 
-function RepoCard({ repo }: { repo: GitHubRepo }) {
+interface RepoCardProps {
+  repo: GitHubRepo
+  onClick: () => void
+}
+
+function RepoCard({ repo, onClick }: RepoCardProps) {
   const { addIgnoredRepo } = useIgnoredRepos()
+
   return (
     <div className="group relative h-full">
       <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <div className="relative flex h-full flex-col rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/8">
+      <button
+        onClick={onClick}
+        className="relative flex h-full w-full cursor-pointer flex-col rounded-2xl border border-border/70 bg-card p-4 text-left shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/8 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
+      >
         <div className="mb-2 flex items-start justify-between gap-2">
-          <Link
-            href={repo.html_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold text-card-foreground transition-colors group-hover:text-primary"
-          >
+          <span className="text-sm font-semibold text-card-foreground transition-colors group-hover:text-primary">
             {repo.full_name}
-          </Link>
-          <div className="flex items-center gap-1">
+          </span>
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 addIgnoredRepo(repo.full_name)
               }}
-              className="shrink-0 text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100 cursor-pointer"
+              className="text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100 cursor-pointer"
               title={`Hide ${repo.full_name} from results`}
               aria-label={`Ignore ${repo.full_name}`}
             >
@@ -100,8 +111,9 @@ function RepoCard({ repo }: { repo: GitHubRepo }) {
               href={repo.html_url}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
               aria-label="Open on GitHub"
-              className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+              className="text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
             >
               <ExternalLink className="size-3.5" />
             </Link>
@@ -130,7 +142,7 @@ function RepoCard({ repo }: { repo: GitHubRepo }) {
             {(repo.forks_count ?? 0).toLocaleString()}
           </span>
         </div>
-      </div>
+      </button>
     </div>
   )
 }

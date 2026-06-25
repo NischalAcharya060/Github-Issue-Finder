@@ -10,7 +10,9 @@ import { Navbar } from "@/components/layout/navbar"
 import { Sidebar } from "@/components/layout/sidebar"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { RepoList } from "@/components/repos/repo-list"
+import { RepoIssuesModal } from "@/components/repos/repo-issues-modal"
 import { IssueDetailModal } from "@/components/issues/issue-detail-modal"
+import { getRepoIssues } from "@/lib/github-api"
 import { ExportButton } from "@/components/shared/export-button"
 import { Button } from "@/components/ui/button"
 import { Bookmark, BarChart3 } from "lucide-react"
@@ -29,7 +31,7 @@ import { useHotkey } from "@/hooks/use-hotkey"
 import { ForYouFeed } from "@/components/dashboard/for-you-feed"
 import { TrendingFeed } from "@/components/dashboard/trending-feed"
 import { SearchAnalytics } from "@/components/dashboard/search-analytics"
-import type { SearchMode, FilterState, SortOption, EntityType, SearchResponse, RepoSearchResponse } from "@/lib/types"
+import type { SearchMode, FilterState, SortOption, EntityType, SearchResponse, RepoSearchResponse, GitHubIssue } from "@/lib/types"
 
 const defaultFilters: FilterState = {
   language: "all",
@@ -55,6 +57,10 @@ export default function Home() {
   const [page, setPage] = useState(1)
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
   const [selectedIssue, setSelectedIssue] = useState<number | null>(null)
+  const [selectedRepo, setSelectedRepo] = useState<{ owner: string; repo: string } | null>(null)
+  const [repoIssues, setRepoIssues] = useState<GitHubIssue[] | null>(null)
+  const [repoIssuesLoading, setRepoIssuesLoading] = useState(false)
+  const [repoIssuesError, setRepoIssuesError] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [, setSavedSearches] = useLocalStorage<
     { name: string; query: string; filters: FilterState }[]
@@ -112,6 +118,24 @@ export default function Home() {
     setKeyword(query)
     setPage(1)
   }, [])
+
+  const handleRepoClick = useCallback(
+    async (owner: string, repo: string) => {
+      setSelectedRepo({ owner, repo })
+      setRepoIssues(null)
+      setRepoIssuesLoading(true)
+      setRepoIssuesError(false)
+      try {
+        const issues = await getRepoIssues(owner, repo)
+        setRepoIssues(issues)
+      } catch {
+        setRepoIssuesError(true)
+      } finally {
+        setRepoIssuesLoading(false)
+      }
+    },
+    []
+  )
 
   const handleSaveSearch = useCallback(() => {
     const name = `Search "${keyword}"`
@@ -236,6 +260,7 @@ export default function Home() {
                   data={filteredRepoData}
                   isLoading={isLoading}
                   isError={isError}
+                  onRepoClick={handleRepoClick}
                 />
               ) : (
                 <IssueList
@@ -280,6 +305,17 @@ export default function Home() {
         issues={filteredIssues ?? []}
         onClose={() => setSelectedIssue(null)}
       />
+
+      {selectedRepo && (
+        <RepoIssuesModal
+          owner={selectedRepo.owner}
+          repo={selectedRepo.repo}
+          issues={repoIssues}
+          isLoading={repoIssuesLoading}
+          isError={repoIssuesError}
+          onClose={() => setSelectedRepo(null)}
+        />
+      )}
     </div>
   )
 }

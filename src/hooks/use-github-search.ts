@@ -21,9 +21,7 @@ function buildQuery(
   const parts: string[] = []
 
   if (keyword.trim()) {
-    if (mode === "repo") {
-      parts.push(`repo:${keyword}`)
-    } else if (mode === "org") {
+    if (mode === "org") {
       parts.push(`org:${keyword}`)
     } else {
       parts.push(keyword)

@@ -4,6 +4,7 @@ import type {
   RepoSearchResponse,
   SearchParams,
   GitHubRepo,
+  GitHubIssue,
 } from "./types"
 
 const githubApi = axios.create({
@@ -14,7 +15,6 @@ const githubApi = axios.create({
 })
 
 githubApi.interceptors.request.use((config) => {
-  // Use client token from localStorage if available, otherwise fallback to public env token
   let token = null
   if (typeof window !== "undefined") {
     token = localStorage.getItem("github-token")
@@ -73,6 +73,21 @@ export async function getOrganizationRepos(
   const { data } = await githubApi.get<GitHubRepo[]>(`/orgs/${org}/repos`, {
     params: { page, per_page: perPage, sort: "updated" },
   })
+  return data
+}
+
+export async function getRepoIssues(
+  owner: string,
+  repo: string,
+  page = 1,
+  perPage = 30
+): Promise<GitHubIssue[]> {
+  const { data } = await githubApi.get<GitHubIssue[]>(
+    `/repos/${owner}/${repo}/issues`,
+    {
+      params: { state: "open", page, per_page: perPage, sort: "created" },
+    }
+  )
   return data
 }
 
