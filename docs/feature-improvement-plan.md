@@ -41,8 +41,8 @@
 **File:** `src/lib/github-api.ts:68-77`
 **Do:** Create `src/app/api/search/orgs/[org]/route.ts` that proxies the GitHub call server-side (same pattern as `search/issues`). Update client to call it. Prevents token leak.
 
-### 2.2 Add rate-limiting / security headers via middleware
-**New file:** `src/middleware.ts`
+### 2.2 Add rate-limiting / security headers via proxy
+**New file:** `src/proxy.ts`
 **Do:** Add CSP, HSTS, X-Frame-Options headers. Optionally rate-limit API routes.
 
 ### 2.3 Add server-side pagination for saved issues/repos
