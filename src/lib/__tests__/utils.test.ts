@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn, getRepoFromUrl } from "@/lib/utils"
 
 describe("cn", () => {
   it("merges class names", () => {
@@ -11,5 +11,15 @@ describe("cn", () => {
 
   it("merges tailwind classes correctly", () => {
     expect(cn("px-4", "px-2")).toBe("px-2")
+  })
+})
+
+describe("getRepoFromUrl", () => {
+  it("extracts owner/repo from api url", () => {
+    expect(getRepoFromUrl("https://api.github.com/repos/owner/repo")).toBe("owner/repo")
+  })
+
+  it("handles empty string", () => {
+    expect(getRepoFromUrl("")).toBe("")
   })
 })

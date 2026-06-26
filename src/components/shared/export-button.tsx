@@ -2,15 +2,31 @@
 
 import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { SearchResponse } from "@/lib/types"
+import type { SearchResponse, GitHubIssue } from "@/lib/types"
 
 interface ExportButtonProps {
-  data: SearchResponse | undefined
+  data?: SearchResponse
+  items?: GitHubIssue[]
   filename: string
 }
 
-export function ExportButton({ data, filename }: ExportButtonProps) {
-  if (!data || data.items.length === 0) return null
+function toCsvRow(issue: GitHubIssue) {
+  return [
+    `"${issue.title.replace(/"/g, '""')}"`,
+    issue.state,
+    issue.repository_url.replace("https://api.github.com/repos/", ""),
+    `"${issue.labels.map((l) => l.name).join(", ")}"`,
+    issue.created_at,
+    issue.comments,
+    issue.score,
+    issue.user?.login ?? "",
+    issue.html_url,
+  ]
+}
+
+export function ExportButton({ data, items, filename }: ExportButtonProps) {
+  const exportItems = items ?? data?.items
+  if (!exportItems || exportItems.length === 0) return null
 
   const handleExport = () => {
     const headers = [
@@ -25,17 +41,7 @@ export function ExportButton({ data, filename }: ExportButtonProps) {
       "URL",
     ]
 
-    const rows = data.items.map((issue) => [
-      `"${issue.title.replace(/"/g, '""')}"`,
-      issue.state,
-      issue.repository_url.replace("https://api.github.com/repos/", ""),
-      `"${issue.labels.map((l) => l.name).join(", ")}"`,
-      issue.created_at,
-      issue.comments,
-      issue.score,
-      issue.user?.login ?? "",
-      issue.html_url,
-    ])
+    const rows = exportItems.map(toCsvRow)
 
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })

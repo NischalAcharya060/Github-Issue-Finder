@@ -17,7 +17,7 @@ import { getRepoFromUrl } from "@/lib/utils"
 import { ExportButton } from "@/components/shared/export-button"
 import { KeyboardShortcutsModal } from "@/components/shared/keyboard-shortcuts-modal"
 import { Button } from "@/components/ui/button"
-import { BarChart3 } from "lucide-react"
+import { BarChart3, CheckSquare } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -65,11 +65,12 @@ export default function Home() {
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set())
+  const [bulkMode, setBulkMode] = useState(false)
   const [, setRecentSearches] = useLocalStorage<string[]>("recent-searches", [])
 
   const debouncedKeyword = useDebounce(keyword, 400)
 
-  const { isIgnored } = useIgnoredRepos()
+  const { isIgnored, addIgnoredRepo } = useIgnoredRepos()
 
   const { data, isLoading, isError } = useGithubSearch(
     debouncedKeyword,
@@ -141,6 +142,8 @@ export default function Home() {
     ? Math.min(Math.ceil((data as SearchResponse | RepoSearchResponse).total_count / 30), 100)
     : 0
 
+  const selectedIssueObjects = (filteredIssues ?? []).filter((i) => selectedIssues.has(i.id))
+
   const toggleSelectIssue = useCallback((id: number) => {
     setSelectedIssues((prev) => {
       const next = new Set(prev)
@@ -150,7 +153,45 @@ export default function Home() {
     })
   }, [])
 
-  const clearSelection = useCallback(() => setSelectedIssues(new Set()), [])
+  const clearSelection = useCallback(() => {
+    setSelectedIssues(new Set())
+    setBulkMode(false)
+  }, [])
+
+  const bulkExportFilename = selectedIssueObjects.length > 0
+    ? `github-issues-${keyword.replace(/\s+/g, "-")}-selected`
+    : "github-issues-selected"
+
+  const bulkIgnoreRepos = () => {
+    selectedIssueObjects.forEach((issue) => {
+      addIgnoredRepo(getRepoFromUrl(issue.repository_url))
+    })
+    clearSelection()
+  }
+
+  const bulkSaveAll = async () => {
+    for (const issue of selectedIssueObjects) {
+      try {
+        await fetch("/api/saved-issues", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            issueId: issue.id,
+            number: issue.number,
+            title: issue.title,
+            htmlUrl: issue.html_url,
+            repoFullName: getRepoFromUrl(issue.repository_url),
+            state: issue.state,
+            labels: issue.labels.map((l) => ({ name: l.name, color: l.color })),
+            saved: true,
+          }),
+        })
+      } catch {
+        // silently skip failures
+      }
+    }
+    clearSelection()
+  }
 
   const allFilteredIds = (filteredIssues ?? []).map((i) => i.id)
   const allSelected = allFilteredIds.length > 0 && allFilteredIds.every((id) => selectedIssues.has(id))
@@ -242,11 +283,38 @@ export default function Home() {
                       <span className="hidden sm:inline">Insights</span>
                     </Button>
                   )}
-                  {keyword && entityType === "issues" && (
+                  {keyword && entityType === "issues" && !bulkMode && (
                     <ExportButton
                       data={data as SearchResponse | undefined}
                       filename={`github-issues-${keyword.replace(/\s+/g, "-")}`}
                     />
+                  )}
+                  {(entityType === "issues" || entityType === "organizations") && (
+                    <>
+                      <Button
+                        variant={bulkMode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setBulkMode(!bulkMode)
+                          if (bulkMode) setSelectedIssues(new Set())
+                        }}
+                        title="Toggle bulk selection"
+                        className="gap-1.5 text-muted-foreground cursor-pointer"
+                      >
+                        <CheckSquare className="size-3.5" />
+                        <span className="hidden sm:inline">Select</span>
+                      </Button>
+                      {bulkMode && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={toggleSelectAll}
+                          className="gap-1.5 text-muted-foreground cursor-pointer"
+                        >
+                          {allSelected ? "Deselect All" : "Select All"}
+                        </Button>
+                      )}
+                    </>
                   )}
                   <SortDropdown value={sort} onChange={setSort} />
                 </div>
@@ -256,7 +324,7 @@ export default function Home() {
                 <SearchAnalytics issues={filteredIssues} />
               )}
 
-              {selectedIssues.size > 0 && entityType !== "repositories" && (
+              {selectedIssues.size > 0 && (entityType === "issues" || entityType === "organizations") && (
                 <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5">
                   <input
                     type="checkbox"
@@ -267,8 +335,18 @@ export default function Home() {
                   <span className="text-sm font-medium text-foreground">
                     {selectedIssues.size} selected
                   </span>
-                  <div className="ml-auto flex gap-2">
-                    <Button variant="outline" size="sm" onClick={clearSelection} className="cursor-pointer">
+                  <div className="ml-auto flex items-center gap-2">
+                    <ExportButton
+                      items={selectedIssueObjects}
+                      filename={bulkExportFilename}
+                    />
+                    <Button variant="outline" size="sm" onClick={bulkSaveAll} className="cursor-pointer">
+                      Save All
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={bulkIgnoreRepos} className="cursor-pointer">
+                      Ignore Repos
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={clearSelection} className="cursor-pointer">
                       Clear
                     </Button>
                   </div>
@@ -282,8 +360,8 @@ export default function Home() {
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
                   onIssueClick={setSelectedIssue}
-                  selectedIssues={selectedIssues}
-                  onToggleSelect={toggleSelectIssue}
+                  selectedIssues={bulkMode ? selectedIssues : undefined}
+                  onToggleSelect={bulkMode ? toggleSelectIssue : undefined}
                 />
               ) : entityType === "repositories" ? (
                 <RepoList
@@ -299,8 +377,8 @@ export default function Home() {
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
                   onIssueClick={setSelectedIssue}
-                  selectedIssues={selectedIssues}
-                  onToggleSelect={toggleSelectIssue}
+                  selectedIssues={bulkMode ? selectedIssues : undefined}
+                  onToggleSelect={bulkMode ? toggleSelectIssue : undefined}
                 />
               )}
 
