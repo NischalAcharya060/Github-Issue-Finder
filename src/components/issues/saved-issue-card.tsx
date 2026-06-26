@@ -20,6 +20,8 @@ interface SavedIssueCardProps {
   onRemove: (item: SavedIssue) => void
   pending?: boolean
   detailView?: boolean
+  selected?: boolean
+  onToggleSelect?: (id: number) => void
 }
 
 export function SavedIssueCard({
@@ -29,6 +31,8 @@ export function SavedIssueCard({
   onRemove,
   pending,
   detailView = true,
+  selected,
+  onToggleSelect,
 }: SavedIssueCardProps) {
   const patch = usePatchSavedIssue()
   const { theme } = useTheme()
@@ -78,6 +82,14 @@ export function SavedIssueCard({
         {/* Card Header */}
         <div className="mb-3 flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            {onToggleSelect && (
+              <input
+                type="checkbox"
+                checked={!!selected}
+                onChange={() => onToggleSelect(item.issueId)}
+                className="size-4 rounded border-border accent-primary cursor-pointer shrink-0"
+              />
+            )}
             <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 text-xs font-medium text-secondary-foreground">
               <GitPullRequest className="size-3 shrink-0 text-muted-foreground" />
               <span className="max-w-[150px] truncate">{item.repoFullName}</span>
