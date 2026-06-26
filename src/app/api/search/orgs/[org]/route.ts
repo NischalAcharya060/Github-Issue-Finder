@@ -23,7 +23,7 @@ export async function GET(
     const tokenHash = activeToken ? activeToken.substring(activeToken.length - 8) : "public"
     const cacheKey = `orgs:${org}:${page}:${perPage}:${tokenHash}`
 
-    const cachedData = getCachedItem<unknown>(cacheKey)
+    const cachedData = await getCachedItem<unknown>(cacheKey)
     if (cachedData) {
       return NextResponse.json(cachedData, {
         headers: {
@@ -46,7 +46,7 @@ export async function GET(
       headers,
     })
 
-    setCachedItem(cacheKey, response.data)
+    await setCachedItem(cacheKey, response.data)
 
     return NextResponse.json(response.data, {
       headers: {

@@ -15,8 +15,9 @@ import { IssueDetailModal } from "@/components/issues/issue-detail-modal"
 import { getRepoIssues } from "@/lib/github-api"
 import { getRepoFromUrl } from "@/lib/utils"
 import { ExportButton } from "@/components/shared/export-button"
+import { KeyboardShortcutsModal } from "@/components/shared/keyboard-shortcuts-modal"
 import { Button } from "@/components/ui/button"
-import { Bookmark, BarChart3 } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -62,9 +63,8 @@ export default function Home() {
   const [repoIssuesLoading, setRepoIssuesLoading] = useState(false)
   const [repoIssuesError, setRepoIssuesError] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
-  const [, setSavedSearches] = useLocalStorage<
-    { name: string; query: string; filters: FilterState }[]
-  >("saved-searches", [])
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set())
   const [, setRecentSearches] = useLocalStorage<string[]>("recent-searches", [])
 
   const debouncedKeyword = useDebounce(keyword, 400)
@@ -137,17 +137,31 @@ export default function Home() {
     []
   )
 
-  const handleSaveSearch = useCallback(() => {
-    const name = `Search "${keyword}"`
-    setSavedSearches((prev) => {
-      const next = [{ name, query: keyword, filters }, ...prev]
-      return next.slice(0, 20)
-    })
-  }, [keyword, filters, setSavedSearches])
-
   const totalPages = data
     ? Math.min(Math.ceil((data as SearchResponse | RepoSearchResponse).total_count / 30), 100)
     : 0
+
+  const toggleSelectIssue = useCallback((id: number) => {
+    setSelectedIssues((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const clearSelection = useCallback(() => setSelectedIssues(new Set()), [])
+
+  const allFilteredIds = (filteredIssues ?? []).map((i) => i.id)
+  const allSelected = allFilteredIds.length > 0 && allFilteredIds.every((id) => selectedIssues.has(id))
+
+  const toggleSelectAll = useCallback(() => {
+    if (allSelected) {
+      clearSelection()
+    } else {
+      setSelectedIssues(new Set(allFilteredIds))
+    }
+  }, [allSelected, allFilteredIds, clearSelection])
 
   useKeyboardShortcut("Escape", () => setSelectedIssue(null))
 
@@ -157,6 +171,7 @@ export default function Home() {
 
   useKeyboardShortcut("k", focusSearch, { metaKey: true })
   useKeyboardShortcut("k", focusSearch, { ctrlKey: true })
+  useKeyboardShortcut("?", () => setShowShortcuts(true))
 
   useEffect(() => {
     document.title = keyword
@@ -233,24 +248,31 @@ export default function Home() {
                       filename={`github-issues-${keyword.replace(/\s+/g, "-")}`}
                     />
                   )}
-                  {keyword && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSaveSearch}
-                      title="Save this search"
-                      className="gap-1.5 text-muted-foreground cursor-pointer"
-                    >
-                      <Bookmark className="size-3.5" />
-                      <span className="hidden sm:inline">Save</span>
-                    </Button>
-                  )}
                   <SortDropdown value={sort} onChange={setSort} />
                 </div>
               </div>
 
               {showAnalytics && data && entityType === "issues" && filteredIssues && filteredIssues.length > 0 && (
                 <SearchAnalytics issues={filteredIssues} />
+              )}
+
+              {selectedIssues.size > 0 && entityType !== "repositories" && (
+                <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="size-4 rounded border-border accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedIssues.size} selected
+                  </span>
+                  <div className="ml-auto flex gap-2">
+                    <Button variant="outline" size="sm" onClick={clearSelection} className="cursor-pointer">
+                      Clear
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {entityType === "issues" ? (
@@ -260,6 +282,8 @@ export default function Home() {
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
                   onIssueClick={setSelectedIssue}
+                  selectedIssues={selectedIssues}
+                  onToggleSelect={toggleSelectIssue}
                 />
               ) : entityType === "repositories" ? (
                 <RepoList
@@ -275,6 +299,8 @@ export default function Home() {
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
                   onIssueClick={setSelectedIssue}
+                  selectedIssues={selectedIssues}
+                  onToggleSelect={toggleSelectIssue}
                 />
               )}
 
@@ -321,6 +347,8 @@ export default function Home() {
           onClose={() => setSelectedRepo(null)}
         />
       )}
+
+      <KeyboardShortcutsModal open={showShortcuts} onOpenChange={setShowShortcuts} />
     </div>
   )
 }
