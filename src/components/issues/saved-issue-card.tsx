@@ -19,6 +19,7 @@ interface SavedIssueCardProps {
   onToggleDone: (item: SavedIssue) => void
   onRemove: (item: SavedIssue) => void
   pending?: boolean
+  detailView?: boolean
 }
 
 export function SavedIssueCard({
@@ -27,6 +28,7 @@ export function SavedIssueCard({
   onToggleDone,
   onRemove,
   pending,
+  detailView = true,
 }: SavedIssueCardProps) {
   const patch = usePatchSavedIssue()
   const { theme } = useTheme()
@@ -92,21 +94,23 @@ export function SavedIssueCard({
             </span>
           </div>
           
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            asChild
-            className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-          >
-            <Link
-              href={item.htmlUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open on GitHub"
+          {detailView && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              asChild
+              className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
             >
-              <ExternalLink />
-            </Link>
-          </Button>
+              <Link
+                href={item.htmlUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open on GitHub"
+              >
+                <ExternalLink />
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Issue Title */}
@@ -123,7 +127,7 @@ export function SavedIssueCard({
         </Link>
 
         {/* Labels */}
-        {item.labels && item.labels.length > 0 && (
+        {detailView && item.labels && item.labels.length > 0 && (
           <div className="mb-4 flex min-h-5 flex-wrap gap-1">
             {item.labels.slice(0, 3).map((label) => {
               const labelStyle = getLabelStyle(label.name, label.color, isDark)
@@ -142,6 +146,7 @@ export function SavedIssueCard({
         )}
 
         {/* Notes & PR Details */}
+        {detailView ? (
         <div className="mb-4 rounded-xl bg-secondary/35 border border-border/40 p-2.5 space-y-2">
           {isEditing ? (
             <div className="space-y-2.5">
@@ -211,6 +216,7 @@ export function SavedIssueCard({
             </div>
           )}
         </div>
+        ) : null}
 
         {/* Card Footer (Status and Actions) */}
         <div className="mt-auto flex items-center justify-between gap-1 border-t border-border/50 pt-3 text-[11px] text-muted-foreground">

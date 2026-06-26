@@ -64,7 +64,6 @@ export async function PATCH(
   } else if (finalSaved !== undefined) {
     if (finalSaved === false) {
       finalStatus = "BACKLOG"
-      finalDone = false
     }
   }
 
