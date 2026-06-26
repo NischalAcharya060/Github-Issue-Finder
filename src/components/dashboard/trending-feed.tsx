@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState } from "react"
 import { TrendingUp, Flame, Star, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { IssueList } from "@/components/issues/issue-list"
@@ -8,6 +8,7 @@ import { Pagination } from "@/components/shared/pagination"
 import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import { searchIssues } from "@/lib/github-api"
 import { useQuery } from "@tanstack/react-query"
+import { cn, getRepoFromUrl } from "@/lib/utils"
 import type { SearchResponse } from "@/lib/types"
 
 type TrendingPeriod = "today" | "week" | "month"
@@ -70,11 +71,6 @@ export function TrendingFeed({ onIssueClick }: TrendingFeedProps) {
       }),
     staleTime: 120_000,
   })
-
-  const getRepoFromUrl = useCallback(
-    (url: string) => url.replace("https://api.github.com/repos/", ""),
-    []
-  )
 
   const filteredIssues = (data?.items ?? []).filter(
     (issue) => !isIgnored(getRepoFromUrl(issue.repository_url))
@@ -167,6 +163,4 @@ export function TrendingFeed({ onIssueClick }: TrendingFeedProps) {
   )
 }
 
-function cn(...classes: (string | boolean | undefined | null)[]): string {
-  return classes.filter(Boolean).join(" ")
-}
+

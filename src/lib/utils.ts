@@ -6,6 +6,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function getRepoFromUrl(url: string): string {
+  return url.replace("https://api.github.com/repos/", "")
+}
+
 export const labelStyles: Record<string, string> = {
   bug: "bg-red-500/12 text-red-600 dark:text-red-400 border-red-500/25",
   enhancement:

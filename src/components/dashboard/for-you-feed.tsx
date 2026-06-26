@@ -8,6 +8,7 @@ import { Pagination } from "@/components/shared/pagination"
 import { useGithubSearch } from "@/hooks/use-github-search"
 import { SettingsDialog } from "@/components/layout/settings-dialog"
 import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
+import { getRepoFromUrl } from "@/lib/utils"
 import type { FilterState, SearchResponse } from "@/lib/types"
 
 const defaultFilters: FilterState = {
@@ -108,8 +109,6 @@ export function ForYouFeed({ onIssueClick }: ForYouFeedProps) {
       </div>
     )
   }
-
-  const getRepoFromUrl = (url: string) => url.replace("https://api.github.com/repos/", "")
 
   // Add match scores to issues dynamically
   const issuesWithMatchScores = data

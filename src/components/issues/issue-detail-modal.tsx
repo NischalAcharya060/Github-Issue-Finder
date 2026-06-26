@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getLabelStyle } from "@/lib/utils"
+import { getLabelStyle, getRepoFromUrl } from "@/lib/utils"
 import { useTheme } from "@/hooks/use-theme"
 import { Markdown } from "@/components/shared/markdown"
 import { IssueActions } from "@/components/issues/issue-actions"
@@ -31,10 +31,6 @@ interface IssueDetailModalProps {
   issueId: number | null
   issues: GitHubIssue[]
   onClose: () => void
-}
-
-function getRepoFromUrl(url: string): string {
-  return url.replace("https://api.github.com/repos/", "")
 }
 
 export function IssueDetailModal({

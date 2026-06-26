@@ -7,17 +7,12 @@ import { formatDistanceToNow } from "date-fns"
 import { MessageSquare, Star, ExternalLink, GitPullRequest, EyeOff } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getLabelStyle, cn } from "@/lib/utils"
+import { getLabelStyle, cn, getRepoFromUrl } from "@/lib/utils"
 import { IssueActions } from "@/components/issues/issue-actions"
 import { useSavedIssuesMap } from "@/hooks/use-saved-issues"
 import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import { useTheme } from "@/hooks/use-theme"
 import type { GitHubIssue } from "@/lib/types"
-
-function getRepoFromUrl(url: string): string {
-  return url.replace("https://api.github.com/repos/", "")
-}
-
 
 interface IssueCardProps {
   issue: GitHubIssue

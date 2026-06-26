@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { FilterPanel } from "@/components/search/filter-panel"
 import { SortDropdown } from "@/components/search/sort-dropdown"
 import { IssueList } from "@/components/issues/issue-list"
@@ -13,6 +13,7 @@ import { RepoList } from "@/components/repos/repo-list"
 import { RepoIssuesModal } from "@/components/repos/repo-issues-modal"
 import { IssueDetailModal } from "@/components/issues/issue-detail-modal"
 import { getRepoIssues } from "@/lib/github-api"
+import { getRepoFromUrl } from "@/lib/utils"
 import { ExportButton } from "@/components/shared/export-button"
 import { Button } from "@/components/ui/button"
 import { Bookmark, BarChart3 } from "lucide-react"
@@ -27,7 +28,6 @@ import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut"
-import { useHotkey } from "@/hooks/use-hotkey"
 import { ForYouFeed } from "@/components/dashboard/for-you-feed"
 import { TrendingFeed } from "@/components/dashboard/trending-feed"
 import { SearchAnalytics } from "@/components/dashboard/search-analytics"
@@ -82,7 +82,7 @@ export default function Home() {
 
   const filteredIssues = entityType !== "repositories"
     ? (data as SearchResponse | undefined)?.items?.filter(
-        (issue) => !isIgnored(issue.repository_url.replace("https://api.github.com/repos/", ""))
+        (issue) => !isIgnored(getRepoFromUrl(issue.repository_url))
       )
     : undefined
   const filteredRepoData = data && entityType === "repositories"
@@ -155,8 +155,14 @@ export default function Home() {
     document.getElementById("search-input")?.focus()
   }, [])
 
-  useHotkey("k", focusSearch, { metaKey: true })
-  useHotkey("k", focusSearch, { ctrlKey: true })
+  useKeyboardShortcut("k", focusSearch, { metaKey: true })
+  useKeyboardShortcut("k", focusSearch, { ctrlKey: true })
+
+  useEffect(() => {
+    document.title = keyword
+      ? `${keyword} — Issue Finder`
+      : "Issue Finder — Discover GitHub issues worth contributing to"
+  }, [keyword])
 
   return (
     <div className="flex min-h-dvh flex-col">
