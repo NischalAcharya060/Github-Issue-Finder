@@ -23,7 +23,7 @@ function applyAccent(accent: string) {
 }
 
 export function usePreferences() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const isAuthed = status === "authenticated"
 
   const [theme, setThemeState] = useState(() => loadLocal("theme", "dark"))

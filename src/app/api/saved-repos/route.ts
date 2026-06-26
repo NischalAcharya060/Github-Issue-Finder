@@ -12,12 +12,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const items = await prisma.savedRepo.findMany({
-    where: { userId: session.user.id },
-    orderBy: { updatedAt: "desc" },
-  })
+  const url = new URL(req.url)
+  const skipParam = url.searchParams.get("skip")
+  const takeParam = url.searchParams.get("take")
+  const hasPagination = skipParam !== null || takeParam !== null
+  const skip = hasPagination ? Math.max(0, Number(skipParam) || 0) : undefined
+  const take = hasPagination ? Math.min(100, Math.max(1, Number(takeParam) || 50)) : undefined
 
-  return NextResponse.json({ items: items.map(serializeSavedRepo) })
+  const [items, total] = await Promise.all([
+    prisma.savedRepo.findMany({
+      where: { userId: session.user.id },
+      orderBy: { updatedAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.savedRepo.count({ where: { userId: session.user.id } }),
+  ])
+
+  return NextResponse.json({ items: items.map(serializeSavedRepo), total })
 }
 
 const createSchema = z.object({

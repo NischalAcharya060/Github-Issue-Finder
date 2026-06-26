@@ -70,8 +70,17 @@ export async function getOrganizationRepos(
   page = 1,
   perPage = 30
 ): Promise<GitHubRepo[]> {
-  const { data } = await githubApi.get<GitHubRepo[]>(`/orgs/${org}/repos`, {
-    params: { page, per_page: perPage, sort: "updated" },
+  const headers: Record<string, string> = {}
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("github-token")
+    if (token) {
+      headers["X-Github-Token"] = token
+    }
+  }
+
+  const { data } = await axios.get<GitHubRepo[]>(`/api/search/orgs/${org}`, {
+    params: { page, per_page: perPage },
+    headers,
   })
   return data
 }
