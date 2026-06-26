@@ -3,6 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { useQuery } from "@tanstack/react-query"
+import axios from "axios"
 import {
   ExternalLink,
   MessageSquare,
@@ -11,6 +13,7 @@ import {
   Heart,
   Hash,
   GitPullRequest,
+  Loader2,
 } from "lucide-react"
 import {
   Dialog,
@@ -21,7 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getLabelStyle } from "@/lib/utils"
+import { getLabelStyle, getRepoFromUrl } from "@/lib/utils"
 import { useTheme } from "@/hooks/use-theme"
 import { Markdown } from "@/components/shared/markdown"
 import { IssueActions } from "@/components/issues/issue-actions"
@@ -33,10 +36,6 @@ interface IssueDetailModalProps {
   onClose: () => void
 }
 
-function getRepoFromUrl(url: string): string {
-  return url.replace("https://api.github.com/repos/", "")
-}
-
 export function IssueDetailModal({
   issueId,
   issues,
@@ -45,6 +44,26 @@ export function IssueDetailModal({
   const { theme } = useTheme()
   const isDark = theme === "dark"
   const issue = issueId ? issues.find((i) => i.id === issueId) : null
+  const issueRepo = issue ? getRepoFromUrl(issue.repository_url) : ""
+
+  const { data: relatedData, isLoading: relatedLoading } = useQuery({
+    queryKey: ["related-issues", issueRepo, issue?.id],
+    queryFn: async () => {
+      const token = localStorage.getItem("github-token")
+      const res = await axios.get("/api/search/issues", {
+        params: {
+          q: `repo:${issueRepo}+state:open`,
+          sort: "created",
+          order: "desc",
+          per_page: 6,
+        },
+        headers: token ? { "x-github-token": token } : undefined,
+      })
+      return (res.data?.items ?? []).filter((i: GitHubIssue) => i.id !== issue!.id).slice(0, 5)
+    },
+    enabled: !!issue,
+    staleTime: 120_000,
+  })
 
   if (!issue) return null
 
@@ -170,6 +189,36 @@ export function IssueDetailModal({
           </div>
           <Markdown content={issue.body || ""} />
         </div>
+
+        {relatedData && relatedData.length > 0 && (
+          <div className="space-y-2 rounded-xl border border-border/60 bg-card/40 p-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              More from {repo}
+            </div>
+            <div className="space-y-1.5">
+              {relatedData.map((related: GitHubIssue) => (
+                <Link
+                  key={related.id}
+                  href={related.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
+                >
+                  <span className="flex size-1.5 shrink-0 rounded-full bg-emerald-400" />
+                  <span className="line-clamp-1">{related.title}</span>
+                  <span className="ml-auto shrink-0 text-[10px]">
+                    #{related.number}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+        {relatedLoading && (
+          <div className="flex items-center justify-center py-2">
+            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          </div>
+        )}
 
         <div className="space-y-3 border-t border-border/50 pt-3">
           <IssueActions issue={issue} variant="grid" />

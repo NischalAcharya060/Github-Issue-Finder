@@ -23,7 +23,7 @@ function applyAccent(accent: string) {
 }
 
 export function usePreferences() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const isAuthed = status === "authenticated"
 
   const [theme, setThemeState] = useState(() => loadLocal("theme", "dark"))
@@ -34,7 +34,7 @@ export function usePreferences() {
     if (!isAuthed) return
     axios.get("/api/preferences").then((res) => {
       const data = res.data
-      if (data.theme && data.theme !== "system") {
+      if (data.theme) {
         setThemeState(data.theme)
         saveLocal("theme", data.theme)
         applyTheme(data.theme)
@@ -48,6 +48,15 @@ export function usePreferences() {
       console.error("Failed to load preferences:", err)
     })
   }, [isAuthed])
+
+  // Listen for OS theme changes when in "system" mode
+  useEffect(() => {
+    if (theme !== "system") return
+    const mq = window.matchMedia("(prefers-color-scheme: dark)")
+    const handler = () => applyTheme("system")
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [theme])
 
   // Apply on mount and when values change — useLayoutEffect to prevent flash
   useLayoutEffect(() => { applyTheme(theme) }, [theme])
@@ -79,7 +88,8 @@ export function usePreferences() {
   }, [isAuthed])
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark")
+    const next = theme === "light" ? "dark" : theme === "dark" ? "system" : "light"
+    setTheme(next)
   }, [theme, setTheme])
 
   return { theme, accent, setTheme, setAccent, toggleTheme }

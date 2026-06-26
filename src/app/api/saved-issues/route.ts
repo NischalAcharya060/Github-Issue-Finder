@@ -6,26 +6,37 @@ import { serializeSavedIssue } from "@/lib/serialize"
 
 export const dynamic = "force-dynamic"
 
-// GET /api/saved-issues?filter=saved|done|all
+// GET /api/saved-issues?filter=saved|done|all&skip=0&take=50
 export async function GET(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const filter = new URL(req.url).searchParams.get("filter") ?? "all"
+  const url = new URL(req.url)
+  const filter = url.searchParams.get("filter") ?? "all"
+  const skipParam = url.searchParams.get("skip")
+  const takeParam = url.searchParams.get("take")
+  const hasPagination = skipParam !== null || takeParam !== null
+  const skip = hasPagination ? Math.max(0, Number(skipParam) || 0) : undefined
+  const take = hasPagination ? Math.min(100, Math.max(1, Number(takeParam) || 50)) : undefined
   const where: { userId: string; saved?: boolean; done?: boolean } = {
     userId: session.user.id,
   }
   if (filter === "saved") where.saved = true
   else if (filter === "done") where.done = true
 
-  const items = await prisma.savedIssue.findMany({
-    where,
-    orderBy: { updatedAt: "desc" },
-  })
+  const [items, total] = await Promise.all([
+    prisma.savedIssue.findMany({
+      where,
+      orderBy: { updatedAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.savedIssue.count({ where }),
+  ])
 
-  return NextResponse.json({ items: items.map(serializeSavedIssue) })
+  return NextResponse.json({ items: items.map(serializeSavedIssue), total })
 }
 
 const labelSchema = z.object({

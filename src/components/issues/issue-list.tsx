@@ -13,6 +13,8 @@ interface IssueListProps {
   isError: boolean
   totalCount: number
   onIssueClick?: (id: number) => void
+  selectedIssues?: Set<number>
+  onToggleSelect?: (id: number) => void
 }
 
 function CardSkeleton() {
@@ -43,6 +45,8 @@ export function IssueList({
   isLoading,
   isError,
   onIssueClick,
+  selectedIssues,
+  onToggleSelect,
 }: IssueListProps) {
   if (isLoading) {
     return (
@@ -128,7 +132,7 @@ export function IssueList({
             }
           }}
         >
-          <IssueCard issue={issue} />
+          <IssueCard issue={issue} selected={selectedIssues?.has(issue.id)} onToggleSelect={onToggleSelect} />
         </StaggerItem>
       ))}
     </Stagger>

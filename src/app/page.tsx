@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { FilterPanel } from "@/components/search/filter-panel"
 import { SortDropdown } from "@/components/search/sort-dropdown"
 import { IssueList } from "@/components/issues/issue-list"
@@ -13,9 +13,11 @@ import { RepoList } from "@/components/repos/repo-list"
 import { RepoIssuesModal } from "@/components/repos/repo-issues-modal"
 import { IssueDetailModal } from "@/components/issues/issue-detail-modal"
 import { getRepoIssues } from "@/lib/github-api"
+import { getRepoFromUrl } from "@/lib/utils"
 import { ExportButton } from "@/components/shared/export-button"
+import { KeyboardShortcutsModal } from "@/components/shared/keyboard-shortcuts-modal"
 import { Button } from "@/components/ui/button"
-import { Bookmark, BarChart3 } from "lucide-react"
+import { BarChart3, CheckSquare } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -27,7 +29,6 @@ import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut"
-import { useHotkey } from "@/hooks/use-hotkey"
 import { ForYouFeed } from "@/components/dashboard/for-you-feed"
 import { TrendingFeed } from "@/components/dashboard/trending-feed"
 import { SearchAnalytics } from "@/components/dashboard/search-analytics"
@@ -62,14 +63,14 @@ export default function Home() {
   const [repoIssuesLoading, setRepoIssuesLoading] = useState(false)
   const [repoIssuesError, setRepoIssuesError] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
-  const [, setSavedSearches] = useLocalStorage<
-    { name: string; query: string; filters: FilterState }[]
-  >("saved-searches", [])
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set())
+  const [bulkMode, setBulkMode] = useState(false)
   const [, setRecentSearches] = useLocalStorage<string[]>("recent-searches", [])
 
   const debouncedKeyword = useDebounce(keyword, 400)
 
-  const { isIgnored } = useIgnoredRepos()
+  const { isIgnored, addIgnoredRepo } = useIgnoredRepos()
 
   const { data, isLoading, isError } = useGithubSearch(
     debouncedKeyword,
@@ -82,7 +83,7 @@ export default function Home() {
 
   const filteredIssues = entityType !== "repositories"
     ? (data as SearchResponse | undefined)?.items?.filter(
-        (issue) => !isIgnored(issue.repository_url.replace("https://api.github.com/repos/", ""))
+        (issue) => !isIgnored(getRepoFromUrl(issue.repository_url))
       )
     : undefined
   const filteredRepoData = data && entityType === "repositories"
@@ -137,17 +138,71 @@ export default function Home() {
     []
   )
 
-  const handleSaveSearch = useCallback(() => {
-    const name = `Search "${keyword}"`
-    setSavedSearches((prev) => {
-      const next = [{ name, query: keyword, filters }, ...prev]
-      return next.slice(0, 20)
-    })
-  }, [keyword, filters, setSavedSearches])
-
   const totalPages = data
     ? Math.min(Math.ceil((data as SearchResponse | RepoSearchResponse).total_count / 30), 100)
     : 0
+
+  const selectedIssueObjects = (filteredIssues ?? []).filter((i) => selectedIssues.has(i.id))
+
+  const toggleSelectIssue = useCallback((id: number) => {
+    setSelectedIssues((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    setSelectedIssues(new Set())
+    setBulkMode(false)
+  }, [])
+
+  const bulkExportFilename = selectedIssueObjects.length > 0
+    ? `github-issues-${keyword.replace(/\s+/g, "-")}-selected`
+    : "github-issues-selected"
+
+  const bulkIgnoreRepos = () => {
+    selectedIssueObjects.forEach((issue) => {
+      addIgnoredRepo(getRepoFromUrl(issue.repository_url))
+    })
+    clearSelection()
+  }
+
+  const bulkSaveAll = async () => {
+    for (const issue of selectedIssueObjects) {
+      try {
+        await fetch("/api/saved-issues", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            issueId: issue.id,
+            number: issue.number,
+            title: issue.title,
+            htmlUrl: issue.html_url,
+            repoFullName: getRepoFromUrl(issue.repository_url),
+            state: issue.state,
+            labels: issue.labels.map((l) => ({ name: l.name, color: l.color })),
+            saved: true,
+          }),
+        })
+      } catch {
+        // silently skip failures
+      }
+    }
+    clearSelection()
+  }
+
+  const allFilteredIds = (filteredIssues ?? []).map((i) => i.id)
+  const allSelected = allFilteredIds.length > 0 && allFilteredIds.every((id) => selectedIssues.has(id))
+
+  const toggleSelectAll = useCallback(() => {
+    if (allSelected) {
+      clearSelection()
+    } else {
+      setSelectedIssues(new Set(allFilteredIds))
+    }
+  }, [allSelected, allFilteredIds, clearSelection])
 
   useKeyboardShortcut("Escape", () => setSelectedIssue(null))
 
@@ -155,8 +210,15 @@ export default function Home() {
     document.getElementById("search-input")?.focus()
   }, [])
 
-  useHotkey("k", focusSearch, { metaKey: true })
-  useHotkey("k", focusSearch, { ctrlKey: true })
+  useKeyboardShortcut("k", focusSearch, { metaKey: true })
+  useKeyboardShortcut("k", focusSearch, { ctrlKey: true })
+  useKeyboardShortcut("?", () => setShowShortcuts(true))
+
+  useEffect(() => {
+    document.title = keyword
+      ? `${keyword} — Issue Finder`
+      : "Issue Finder — Discover GitHub issues worth contributing to"
+  }, [keyword])
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -221,23 +283,38 @@ export default function Home() {
                       <span className="hidden sm:inline">Insights</span>
                     </Button>
                   )}
-                  {keyword && entityType === "issues" && (
+                  {keyword && entityType === "issues" && !bulkMode && (
                     <ExportButton
                       data={data as SearchResponse | undefined}
                       filename={`github-issues-${keyword.replace(/\s+/g, "-")}`}
                     />
                   )}
-                  {keyword && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSaveSearch}
-                      title="Save this search"
-                      className="gap-1.5 text-muted-foreground cursor-pointer"
-                    >
-                      <Bookmark className="size-3.5" />
-                      <span className="hidden sm:inline">Save</span>
-                    </Button>
+                  {(entityType === "issues" || entityType === "organizations") && (
+                    <>
+                      <Button
+                        variant={bulkMode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setBulkMode(!bulkMode)
+                          if (bulkMode) setSelectedIssues(new Set())
+                        }}
+                        title="Toggle bulk selection"
+                        className="gap-1.5 text-muted-foreground cursor-pointer"
+                      >
+                        <CheckSquare className="size-3.5" />
+                        <span className="hidden sm:inline">Select</span>
+                      </Button>
+                      {bulkMode && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={toggleSelectAll}
+                          className="gap-1.5 text-muted-foreground cursor-pointer"
+                        >
+                          {allSelected ? "Deselect All" : "Select All"}
+                        </Button>
+                      )}
+                    </>
                   )}
                   <SortDropdown value={sort} onChange={setSort} />
                 </div>
@@ -247,6 +324,35 @@ export default function Home() {
                 <SearchAnalytics issues={filteredIssues} />
               )}
 
+              {selectedIssues.size > 0 && (entityType === "issues" || entityType === "organizations") && (
+                <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="size-4 rounded border-border accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedIssues.size} selected
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <ExportButton
+                      items={selectedIssueObjects}
+                      filename={bulkExportFilename}
+                    />
+                    <Button variant="outline" size="sm" onClick={bulkSaveAll} className="cursor-pointer">
+                      Save All
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={bulkIgnoreRepos} className="cursor-pointer">
+                      Ignore Repos
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={clearSelection} className="cursor-pointer">
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {entityType === "issues" ? (
                 <IssueList
                   issues={filteredIssues}
@@ -254,6 +360,8 @@ export default function Home() {
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
                   onIssueClick={setSelectedIssue}
+                  selectedIssues={bulkMode ? selectedIssues : undefined}
+                  onToggleSelect={bulkMode ? toggleSelectIssue : undefined}
                 />
               ) : entityType === "repositories" ? (
                 <RepoList
@@ -269,6 +377,8 @@ export default function Home() {
                   isError={isError}
                   totalCount={(data as SearchResponse | undefined)?.total_count ?? 0}
                   onIssueClick={setSelectedIssue}
+                  selectedIssues={bulkMode ? selectedIssues : undefined}
+                  onToggleSelect={bulkMode ? toggleSelectIssue : undefined}
                 />
               )}
 
@@ -315,6 +425,8 @@ export default function Home() {
           onClose={() => setSelectedRepo(null)}
         />
       )}
+
+      <KeyboardShortcutsModal open={showShortcuts} onOpenChange={setShowShortcuts} />
     </div>
   )
 }

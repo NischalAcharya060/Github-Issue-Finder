@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react"
 import Link from "next/link"
 import { useSession, signIn } from "next-auth/react"
 import { toast } from "sonner"
-import { GitBranch, Bookmark, CheckCircle2, LogIn, ArrowLeft, Kanban, List, AlertCircle, Eye, EyeOff, Zap, Search, Plus } from "lucide-react"
+import { GitBranch, Bookmark, CheckCircle2, LogIn, ArrowLeft, Kanban, List, Eye, EyeOff, Zap, Search, Plus, CheckSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { AuthButton } from "@/components/auth/auth-button"
@@ -19,7 +19,8 @@ import {
   usePatchSavedIssue,
   useRemoveSavedIssue,
 } from "@/hooks/use-saved-issues"
-import type { SavedIssue } from "@/lib/types"
+import { ExportButton } from "@/components/shared/export-button"
+import type { SavedIssue, GitHubIssue } from "@/lib/types"
 
 type Tab = "saved" | "done"
 type ViewMode = "board" | "list"
@@ -29,12 +30,15 @@ export default function MyIssuesPage() {
   const [tab, setTab] = useState<Tab>("saved")
   const [viewMode, setViewMode] = useState<ViewMode>("board")
   const [detailView, setDetailView] = useState(true)
+  const [bulkMode, setBulkMode] = useState(false)
+  const [selectedIssueIds, setSelectedIssueIds] = useState<Set<number>>(new Set())
   const { data, isLoading } = useSavedIssues("all")
   const patch = usePatchSavedIssue()
   const remove = useRemoveSavedIssue()
 
   const pending = patch.isPending || remove.isPending
   const [confirmRemove, setConfirmRemove] = useState<SavedIssue | null>(null)
+  const [confirmBulkRemove, setConfirmBulkRemove] = useState(false)
 
   const handleToggleSaved = useCallback((it: SavedIssue) => {
     patch.mutate(
@@ -78,6 +82,52 @@ export default function MyIssuesPage() {
       },
     })
   }, [confirmRemove, remove])
+
+  const allItems = data ?? []
+
+  const toggleSelectIssue = useCallback((issueId: number) => {
+    setSelectedIssueIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(issueId)) next.delete(issueId)
+      else next.add(issueId)
+      return next
+    })
+  }, [])
+
+  const allIds = allItems.map((i) => i.issueId)
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIssueIds.has(id))
+
+  const toggleSelectAll = useCallback(() => {
+    if (allSelected) {
+      setSelectedIssueIds(new Set())
+    } else {
+      setSelectedIssueIds(new Set(allIds))
+    }
+  }, [allSelected, allIds])
+
+  const clearSelection = useCallback(() => {
+    setSelectedIssueIds(new Set())
+    setBulkMode(false)
+  }, [])
+
+  const selectedObjects = allItems.filter((i) => selectedIssueIds.has(i.issueId))
+
+  const bulkExportFilename = `saved-issues-${selectedObjects.length}-selected`
+
+  const bulkMarkDone = () => {
+    selectedObjects.forEach((it) => {
+      patch.mutate({ issueId: it.issueId, done: true })
+    })
+    setSelectedIssueIds(new Set())
+  }
+
+  const bulkRemove = () => {
+    selectedObjects.forEach((it) => {
+      remove.mutate(it.issueId)
+    })
+    setSelectedIssueIds(new Set())
+    setConfirmBulkRemove(false)
+  }
 
   const { saved, done, backlog, inProgress, inReview, completed } = useMemo(() => {
     const all = data ?? []
@@ -162,6 +212,29 @@ export default function MyIssuesPage() {
 
               {/* Toggle View Mode & Detail */}
               <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                <Button
+                  variant={bulkMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setBulkMode(!bulkMode)
+                    if (bulkMode) setSelectedIssueIds(new Set())
+                  }}
+                  title="Toggle bulk selection"
+                  className="gap-1.5 text-muted-foreground cursor-pointer"
+                >
+                  <CheckSquare className="size-3.5" />
+                  <span className="hidden sm:inline">Select</span>
+                </Button>
+                {bulkMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAll}
+                    className="gap-1.5 text-muted-foreground cursor-pointer"
+                  >
+                    {allSelected ? "Deselect All" : "Select All"}
+                  </Button>
+                )}
                 <div className="inline-flex items-center gap-1 rounded-xl bg-secondary/60 p-1 ring-1 ring-border/60">
                   <button
                     onClick={() => setViewMode("board")}
@@ -234,7 +307,37 @@ export default function MyIssuesPage() {
                   <Link href="/">Browse issues</Link>
                 </Button>
               </StatePanel>
-            ) : viewMode === "board" ? (
+            ) : (
+              <>
+              {selectedIssueIds.size > 0 && bulkMode && (
+                <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="size-4 rounded border-border accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedIssueIds.size} selected
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <ExportButton
+                      items={selectedObjects as unknown as GitHubIssue[]}
+                      filename={bulkExportFilename}
+                    />
+                    <Button variant="outline" size="sm" onClick={bulkMarkDone} className="cursor-pointer">
+                      Mark Done
+                    </Button>
+                  <Button variant="outline" size="sm" onClick={() => setConfirmBulkRemove(true)} className="cursor-pointer">
+                    Remove
+                  </Button>
+                    <Button variant="ghost" size="sm" onClick={clearSelection} className="cursor-pointer">
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
+            {viewMode === "board" ? (
               /* Kanban Board View */
               <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 items-start select-none">
                 {kanbanColumns.map((col) => {
@@ -286,6 +389,8 @@ export default function MyIssuesPage() {
                                   onToggleSaved={handleToggleSaved}
                                   onToggleDone={handleToggleDone}
                                   onRemove={(it) => setConfirmRemove(it)}
+                                  selected={bulkMode ? selectedIssueIds.has(item.issueId) : undefined}
+                                  onToggleSelect={bulkMode ? toggleSelectIssue : undefined}
                                 />
                               </StaggerItem>
                             ))}
@@ -366,12 +471,16 @@ export default function MyIssuesPage() {
                           onToggleSaved={handleToggleSaved}
                           onToggleDone={handleToggleDone}
                           onRemove={(it) => setConfirmRemove(it)}
+                          selected={bulkMode ? selectedIssueIds.has(item.issueId) : undefined}
+                          onToggleSelect={bulkMode ? toggleSelectIssue : undefined}
                         />
                       </StaggerItem>
                     ))}
                   </Stagger>
                 )}
               </div>
+            )}
+          </>
             )}
           </>
         )}
@@ -389,6 +498,14 @@ export default function MyIssuesPage() {
         confirmLabel="Remove"
         onConfirm={handleConfirmRemove}
         isLoading={remove.isPending}
+      />
+      <ConfirmDialog
+        open={confirmBulkRemove}
+        onOpenChange={setConfirmBulkRemove}
+        title={`Remove ${selectedIssueIds.size} issues?`}
+        description={`${selectedIssueIds.size} selected issue${selectedIssueIds.size === 1 ? " will" : "s will"} be removed from your saved issues.`}
+        confirmLabel="Remove All"
+        onConfirm={bulkRemove}
       />
     </div>
   )

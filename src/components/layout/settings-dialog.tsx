@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
-import { Palette, Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2, Eye, EyeOff, Sliders, Trash2, Ban, GitPullRequest, Sun, Moon } from "lucide-react"
+import { Palette, Settings, Shield, Key, CheckCircle2, XCircle, Loader2, Code2, Eye, EyeOff, Sliders, Trash2, Ban, GitPullRequest, Sun, Moon, Monitor } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -360,20 +360,29 @@ export function SettingsDialog({ open, onOpenChange, trigger }: SettingsDialogPr
               {/* Appearance */}
               {activeSubTab === "appearance" && (
                 <>
-                  <SectionCard icon={Sun} iconColor="text-primary" title="Theme" description="Switch between light and dark appearance. Applies when you save.">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")}
-                      className="flex w-full items-center justify-between rounded-xl bg-background/50 p-3 border border-border/40 hover:border-border/80 transition-colors cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                        {selectedTheme === "dark" ? <Moon className="size-4" /> : <Sun className="size-4" />}
-                        {selectedTheme === "dark" ? "Dark Mode" : "Light Mode"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {selectedTheme === "dark" ? "On" : "Off"}
-                      </span>
-                    </button>
+                  <SectionCard icon={Sun} iconColor="text-primary" title="Theme" description="Switch between light, dark, or system-follow appearance. Applies when you save.">
+                    <div className="flex gap-2">
+                      {[
+                        { id: "light", label: "Light", icon: Sun },
+                        { id: "dark", label: "Dark", icon: Moon },
+                        { id: "system", label: "System", icon: Monitor },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setSelectedTheme(opt.id)}
+                          className={cn(
+                            "flex flex-1 flex-col items-center gap-2 rounded-xl p-3 border transition-colors cursor-pointer",
+                            selectedTheme === opt.id
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "border-border/40 bg-background/50 text-muted-foreground hover:border-border/80"
+                          )}
+                        >
+                          <opt.icon className="size-5" />
+                          <span className="text-xs font-medium">{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </SectionCard>
 
                   <SectionCard icon={Palette} iconColor="text-primary" title="Accent Color" description="Choose your primary accent color for buttons, links, and highlights. Applies when you save.">

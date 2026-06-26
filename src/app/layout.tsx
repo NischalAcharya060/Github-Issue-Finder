@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://issue-finder.acharyanischal.com.np"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "https://issue-finder.acharyanischal.com.np"),
   title: "Issue Finder — Discover GitHub issues worth contributing to",
   description:
     "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
@@ -70,7 +70,7 @@ export const viewport: Viewport = {
 const themeScript = `
   try {
     const theme = localStorage.getItem("theme");
-    if (theme === "dark" || (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    if (theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) || (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
       document.documentElement.classList.add("dark");
     }
     const accent = localStorage.getItem("accent");

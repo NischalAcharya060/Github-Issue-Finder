@@ -7,23 +7,20 @@ import { formatDistanceToNow } from "date-fns"
 import { MessageSquare, Star, ExternalLink, GitPullRequest, EyeOff } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getLabelStyle, cn } from "@/lib/utils"
+import { getLabelStyle, cn, getRepoFromUrl } from "@/lib/utils"
 import { IssueActions } from "@/components/issues/issue-actions"
 import { useSavedIssuesMap } from "@/hooks/use-saved-issues"
 import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import { useTheme } from "@/hooks/use-theme"
 import type { GitHubIssue } from "@/lib/types"
 
-function getRepoFromUrl(url: string): string {
-  return url.replace("https://api.github.com/repos/", "")
-}
-
-
 interface IssueCardProps {
   issue: GitHubIssue
+  selected?: boolean
+  onToggleSelect?: (id: number) => void
 }
 
-export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
+export const IssueCard = memo(function IssueCard({ issue, selected, onToggleSelect }: IssueCardProps) {
   const repoFullName = getRepoFromUrl(issue.repository_url)
   const isOpen = issue.state === "open"
   const { map } = useSavedIssuesMap()
@@ -43,6 +40,19 @@ export const IssueCard = memo(function IssueCard({ issue }: IssueCardProps) {
       >
         <div className="mb-3 flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            {onToggleSelect && (
+              <input
+                type="checkbox"
+                checked={!!selected}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onToggleSelect(issue.id)
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="mr-1 mt-0.5 size-4 shrink-0 cursor-pointer rounded border-border accent-primary"
+                aria-label={`Select issue ${issue.id}`}
+              />
+            )}
             <span className="flex items-center gap-1.5 rounded-lg bg-secondary/70 px-2 py-1 text-xs font-medium text-secondary-foreground">
               <GitPullRequest className="size-3 shrink-0 text-muted-foreground" />
               <span className="max-w-[150px] truncate">{repoFullName}</span>

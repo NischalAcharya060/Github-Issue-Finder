@@ -12,7 +12,7 @@ import type {
   RepoSearchResponse,
 } from "@/lib/types"
 
-function buildQuery(
+export function buildQuery(
   keyword: string,
   mode: SearchMode,
   filters: FilterState,
@@ -82,7 +82,7 @@ function buildQuery(
   return parts.join(" ")
 }
 
-function getSortParams(sort: SortOption): Pick<SearchParams, "sort" | "order"> {
+export function getSortParams(sort: SortOption): Pick<SearchParams, "sort" | "order"> {
   switch (sort) {
     case "created-desc":
       return { sort: "created", order: "desc" }

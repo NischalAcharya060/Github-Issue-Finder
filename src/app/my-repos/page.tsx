@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import Link from "next/link"
 import { useSession, signIn } from "next-auth/react"
 import { toast } from "sonner"
-import { GitBranch, Bookmark, LogIn, ArrowLeft, Star, GitFork, ExternalLink, Trash2, ChevronRight } from "lucide-react"
+import { GitBranch, Bookmark, LogIn, ArrowLeft, Star, GitFork, ExternalLink, Trash2, ChevronRight, CheckSquare, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { AuthButton } from "@/components/auth/auth-button"
@@ -28,6 +28,80 @@ export default function MyReposPage() {
   const [issuesLoading, setIssuesLoading] = useState(false)
   const [issuesError, setIssuesError] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<SavedRepo | null>(null)
+  const [confirmBulkRemoveRepos, setConfirmBulkRemoveRepos] = useState(false)
+  const [bulkMode, setBulkMode] = useState(false)
+  const [selectedRepoIds, setSelectedRepoIds] = useState<Set<string>>(new Set())
+
+  const allRepos = data ?? []
+
+  const toggleSelectRepo = useCallback((repoFullName: string) => {
+    setSelectedRepoIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(repoFullName)) next.delete(repoFullName)
+      else next.add(repoFullName)
+      return next
+    })
+  }, [])
+
+  const allRepoIds = allRepos.map((r) => r.repoFullName)
+  const allReposSelected = allRepoIds.length > 0 && allRepoIds.every((id) => selectedRepoIds.has(id))
+
+  const toggleSelectAllRepos = useCallback(() => {
+    if (allReposSelected) {
+      setSelectedRepoIds(new Set())
+    } else {
+      setSelectedRepoIds(new Set(allRepoIds))
+    }
+  }, [allReposSelected, allRepoIds])
+
+  const clearRepoSelection = useCallback(() => {
+    setSelectedRepoIds(new Set())
+    setBulkMode(false)
+  }, [])
+
+  const selectedRepoObjects = allRepos.filter((r) => selectedRepoIds.has(r.repoFullName))
+
+  const bulkRemoveRepos = () => {
+    selectedRepoObjects.forEach((item) => {
+      toggle.mutate({
+        repo: {
+          id: 0,
+          name: item.name,
+          full_name: item.repoFullName,
+          html_url: item.htmlUrl,
+          description: item.description,
+          language: item.language,
+          stargazers_count: item.stargazersCount,
+          forks_count: item.forksCount,
+          owner: { login: item.owner, id: 0, avatar_url: "", html_url: "" },
+        },
+        saved: false,
+      })
+    })
+    setSelectedRepoIds(new Set())
+    setConfirmBulkRemoveRepos(false)
+  }
+
+  const bulkExportRepos = () => {
+    const headers = ["Name", "Owner", "URL", "Description", "Language", "Stars", "Forks"]
+    const rows = selectedRepoObjects.map((r) => [
+      `"${r.name.replace(/"/g, '""')}"`,
+      `"${r.owner.replace(/"/g, '""')}"`,
+      r.htmlUrl,
+      `"${(r.description ?? "").replace(/"/g, '""')}"`,
+      r.language ?? "",
+      r.stargazersCount.toString(),
+      r.forksCount.toString(),
+    ])
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `saved-repos-${selectedRepoObjects.length}-selected.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const handleConfirmDelete = () => {
     if (!confirmDelete) return
@@ -141,11 +215,60 @@ export default function MyReposPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant={bulkMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setBulkMode(!bulkMode)
+                    if (bulkMode) setSelectedRepoIds(new Set())
+                  }}
+                  title="Toggle bulk selection"
+                  className="gap-1.5 text-muted-foreground cursor-pointer"
+                >
+                  <CheckSquare className="size-3.5" />
+                  <span className="hidden sm:inline">Select</span>
+                </Button>
+                {bulkMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAllRepos}
+                    className="gap-1.5 text-muted-foreground cursor-pointer"
+                  >
+                    {allReposSelected ? "Deselect All" : "Select All"}
+                  </Button>
+                )}
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {data ? `${data.length} saved` : ""}
                 </span>
               </div>
             </div>
+
+            {selectedRepoIds.size > 0 && bulkMode ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={allReposSelected}
+                  onChange={toggleSelectAllRepos}
+                  className="size-4 rounded border-border accent-primary cursor-pointer"
+                />
+                <span className="text-sm font-medium text-foreground">
+                  {selectedRepoIds.size} selected
+                </span>
+                <div className="ml-auto flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={bulkExportRepos} className="gap-1.5 cursor-pointer">
+                    <Download className="size-3.5" />
+                    Export
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setConfirmBulkRemoveRepos(true)} className="cursor-pointer">
+                    Remove
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={clearRepoSelection} className="cursor-pointer">
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            ) : null}
 
             {loading ? (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -174,6 +297,8 @@ export default function MyReposPage() {
                         onClick={() => handleRepoClick(item)}
                         onRemove={() => setConfirmDelete(item)}
                         isRemoving={isRemoving}
+                        selected={bulkMode ? selectedRepoIds.has(item.repoFullName) : undefined}
+                        onToggleSelect={bulkMode ? toggleSelectRepo : undefined}
                       />
                     </StaggerItem>
                   )
@@ -207,6 +332,14 @@ export default function MyReposPage() {
         onConfirm={handleConfirmDelete}
         isLoading={toggle.isPending}
       />
+      <ConfirmDialog
+        open={confirmBulkRemoveRepos}
+        onOpenChange={setConfirmBulkRemoveRepos}
+        title={`Remove ${selectedRepoIds.size} repositor${selectedRepoIds.size === 1 ? "y" : "ies"}?`}
+        description={`${selectedRepoIds.size} selected ${selectedRepoIds.size === 1 ? "repo will" : "repos will"} be removed from your saved repos.`}
+        confirmLabel="Remove All"
+        onConfirm={bulkRemoveRepos}
+      />
     </div>
   )
 }
@@ -216,9 +349,11 @@ interface SavedRepoCardProps {
   onClick: () => void
   onRemove: () => void
   isRemoving?: boolean
+  selected?: boolean
+  onToggleSelect?: (repoFullName: string) => void
 }
 
-function SavedRepoCard({ item, onClick, onRemove, isRemoving }: SavedRepoCardProps) {
+function SavedRepoCard({ item, onClick, onRemove, isRemoving, selected, onToggleSelect }: SavedRepoCardProps) {
   return (
     <div className="group relative h-full">
       <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -229,6 +364,14 @@ function SavedRepoCard({ item, onClick, onRemove, isRemoving }: SavedRepoCardPro
         >
           <div className="mb-2 flex items-start justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
+              {onToggleSelect && (
+                <input
+                  type="checkbox"
+                  checked={!!selected}
+                  onChange={() => onToggleSelect(item.repoFullName)}
+                  className="size-4 rounded border-border accent-primary cursor-pointer shrink-0"
+                />
+              )}
               <span className="text-sm font-semibold text-card-foreground transition-colors group-hover:text-primary truncate">
                 {item.repoFullName}
               </span>
