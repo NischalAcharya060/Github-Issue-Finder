@@ -135,6 +135,17 @@ export function Welcome({ onSearch }: WelcomeProps) {
         </h1>
       </FadeInUp>
 
+      <FadeInUp delay={0.17}>
+        <p
+          data-speakable
+          className="mx-auto mb-6 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base"
+        >
+          Issue Finder is a search tool that helps open-source contributors discover GitHub issues
+          matching their skills. Search millions of issues by keyword, filter by language and
+          labels, sort by popularity, and save opportunities to track your contributions.
+        </p>
+      </FadeInUp>
+
       <FadeInUp delay={0.2}>
         <p className="mb-10 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
           Search across every public repository on GitHub. Use the search bar

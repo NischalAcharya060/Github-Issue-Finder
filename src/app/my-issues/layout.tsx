@@ -4,6 +4,13 @@ export const metadata: Metadata = {
   title: "My Issues — Issue Finder",
   description:
     "Track and manage your saved GitHub issues. Bookmark, organize, and mark issues as done to monitor your open-source contributions.",
+  keywords: [
+    "saved github issues",
+    "contribution tracker",
+    "open source kanban",
+    "issue bookmarking",
+    "github contribution history",
+  ],
   alternates: {
     canonical: "/my-issues",
   },

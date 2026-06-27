@@ -26,11 +26,15 @@ export const metadata: Metadata = {
   creator: "Nischal Acharya",
   publisher: "Nischal Acharya",
   keywords: [
-    "github issues",
+    "issue finder",
+    "github issue finder",
+    "github issue finder by Nischal Acharya",
+    "find github issues",
     "good first issue",
-    "open source",
+    "open source contributions",
     "help wanted",
-    "contribute",
+    "github issues search",
+    "contribute to open source",
   ],
   alternates: {
     canonical: "/",
@@ -126,6 +130,53 @@ export default function RootLayout({
               "@type": "Offer",
               price: "0",
               priceCurrency: "USD",
+            },
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://issue-finder.acharyanischal.com.np/",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "My Issues",
+                item: "https://issue-finder.acharyanischal.com.np/my-issues",
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: "My Repos",
+                item: "https://issue-finder.acharyanischal.com.np/my-repos",
+              },
+            ],
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "QAPage",
+            name: "Issue Finder — Find GitHub issues worth contributing to",
+            description:
+              "Issue Finder helps open-source contributors discover GitHub issues matching their skills. Search millions of issues by keyword, filter by language and labels, and track your contributions.",
+            mainEntity: {
+              "@type": "Question",
+              name: "How do I find good first issues on GitHub?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Use Issue Finder to search for labels like 'good first issue', 'help wanted', or 'beginner friendly'. Filter by programming language, sort by relevance, and save promising issues to your personal board to track contributions across repositories.",
+              },
+            },
+            speakable: {
+              "@type": "SpeakableSpecification",
+              cssSelector: ["[data-speakable]"],
             },
           }}
         />

@@ -4,6 +4,13 @@ export const metadata: Metadata = {
   title: "My Repos — Issue Finder",
   description:
     "Browse and manage your saved GitHub repositories. Quickly access repos you care about and explore their open issues.",
+  keywords: [
+    "saved github repositories",
+    "repo bookmarking",
+    "open source repos",
+    "favorite repositories",
+    "github repo organizer",
+  ],
   alternates: {
     canonical: "/my-repos",
   },
