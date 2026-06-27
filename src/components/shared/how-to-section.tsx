@@ -1,5 +1,5 @@
 import { JsonLd } from "@/components/shared/json-ld"
-import { Search, SlidersHorizontal, Sparkles, ArrowUpDown, Eye, Bookmark } from "lucide-react"
+import { Search, SlidersHorizontal, ArrowUpDown, Eye, Bookmark } from "lucide-react"
 
 const steps = [
   {
