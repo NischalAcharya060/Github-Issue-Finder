@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "My Repos — Issue Finder",
     description: "Browse and manage your saved GitHub repositories.",
-    images: [{ url: "/opengraph-image.png" }],
+    images: [{ url: "/opengraph-image" }],
   },
 }
 

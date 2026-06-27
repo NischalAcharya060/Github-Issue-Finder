@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/og-image",
+        destination: "/opengraph-image",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

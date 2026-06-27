@@ -47,14 +47,14 @@ export const metadata: Metadata = {
     siteName: "Issue Finder",
     type: "website",
     locale: "en_US",
-    images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/opengraph-image" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Issue Finder — Discover GitHub issues worth contributing to",
     description:
       "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
-    images: [{ url: "/opengraph-image.png" }],
+    images: [{ url: "/opengraph-image" }],
   },
   manifest: "/favicon/site.webmanifest",
   icons: {
