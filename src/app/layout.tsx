@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers/providers";
 import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
 import { Toaster } from "sonner";
+import { JsonLd } from "@/components/shared/json-ld";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -25,11 +26,15 @@ export const metadata: Metadata = {
   creator: "Nischal Acharya",
   publisher: "Nischal Acharya",
   keywords: [
-    "github issues",
+    "issue finder",
+    "github issue finder",
+    "github issue finder by Nischal Acharya",
+    "find github issues",
     "good first issue",
-    "open source",
+    "open source contributions",
     "help wanted",
-    "contribute",
+    "github issues search",
+    "contribute to open source",
   ],
   alternates: {
     canonical: "/",
@@ -37,17 +42,19 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Issue Finder — Discover GitHub issues worth contributing to",
     description:
-      "Search millions of GitHub issues and repositories with powerful filters.",
+      "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
     url: "https://issue-finder.acharyanischal.com.np",
     siteName: "Issue Finder",
     type: "website",
     locale: "en_US",
+    images: [{ url: "/opengraph-image" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Issue Finder — Discover GitHub issues worth contributing to",
     description:
-      "Search millions of GitHub issues and repositories with powerful filters.",
+      "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
+    images: [{ url: "/opengraph-image" }],
   },
   manifest: "/favicon/site.webmanifest",
   icons: {
@@ -95,6 +102,84 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="relative min-h-full flex flex-col">
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "Issue Finder",
+            url: "https://issue-finder.acharyanischal.com.np",
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "All",
+            description:
+              "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
+            author: {
+              "@type": "Person",
+              name: "Nischal Acharya",
+              url: "http://acharyanischal.com.np",
+            },
+            potentialAction: {
+              "@type": "SearchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate:
+                  "https://issue-finder.acharyanischal.com.np/?q={search_term_string}",
+              },
+              "query-input": "required name=search_term_string",
+            },
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://issue-finder.acharyanischal.com.np/",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "My Issues",
+                item: "https://issue-finder.acharyanischal.com.np/my-issues",
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: "My Repos",
+                item: "https://issue-finder.acharyanischal.com.np/my-repos",
+              },
+            ],
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "QAPage",
+            name: "Issue Finder — Find GitHub issues worth contributing to",
+            description:
+              "Issue Finder helps open-source contributors discover GitHub issues matching their skills. Search millions of issues by keyword, filter by language and labels, and track your contributions.",
+            mainEntity: {
+              "@type": "Question",
+              name: "How do I find good first issues on GitHub?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Use Issue Finder to search for labels like 'good first issue', 'help wanted', or 'beginner friendly'. Filter by programming language, sort by relevance, and save promising issues to your personal board to track contributions across repositories.",
+              },
+            },
+            speakable: {
+              "@type": "SpeakableSpecification",
+              cssSelector: ["[data-speakable]"],
+            },
+          }}
+        />
         <div
           aria-hidden
           className="bg-aurora pointer-events-none fixed inset-0 -z-10"
@@ -106,6 +191,29 @@ export default function RootLayout({
           Skip to content
         </a>
         <Providers>{children}</Providers>
+        <footer className="border-t border-border/40 bg-card/30 py-6">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between">
+            <span>
+              Built by{" "}
+              <a
+                href="http://acharyanischal.com.np"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground underline underline-offset-2 decoration-border hover:decoration-foreground transition-colors"
+              >
+                Nischal Acharya
+              </a>
+            </span>
+            <span>
+              Indexing millions of open issues across every public GitHub
+              repository
+            </span>
+            <span>
+              Updated{" "}
+              <time dateTime="2026-06-27">June 27, 2026</time>
+            </span>
+          </div>
+        </footer>
         <ServiceWorkerRegister />
         <Toaster richColors position="bottom-right" closeButton />
       </body>

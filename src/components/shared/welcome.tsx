@@ -120,11 +120,30 @@ export function Welcome({ onSearch }: WelcomeProps) {
         </div>
       </FadeInUp>
 
+      <FadeInUp delay={0.1}>
+        <div className="mb-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">200M+</span> issues indexed
+          <span className="font-semibold text-foreground">5K+</span> contributors
+          <span className="font-semibold text-foreground">100%</span> free & open
+        </div>
+      </FadeInUp>
+
       <FadeInUp delay={0.14}>
         <h1 className="mb-4 max-w-2xl text-balance text-4xl font-bold tracking-tight sm:text-5xl">
           Find issues worth{" "}
           <span className="text-gradient">contributing to</span>
         </h1>
+      </FadeInUp>
+
+      <FadeInUp delay={0.17}>
+        <p
+          data-speakable
+          className="mx-auto mb-6 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base"
+        >
+          Issue Finder is a search tool that helps open-source contributors discover GitHub issues
+          matching their skills. Search millions of issues by keyword, filter by language and
+          labels, sort by popularity, and save opportunities to track your contributions.
+        </p>
       </FadeInUp>
 
       <FadeInUp delay={0.2}>
