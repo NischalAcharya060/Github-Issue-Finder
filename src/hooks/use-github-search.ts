@@ -99,6 +99,23 @@ export function getSortParams(sort: SortOption): Pick<SearchParams, "sort" | "or
   }
 }
 
+function hasActiveFilters(filters: FilterState): boolean {
+  return (
+    filters.language !== "all" ||
+    filters.labels.length > 0 ||
+    filters.state !== "all" ||
+    filters.createdFrom !== "" ||
+    filters.createdTo !== "" ||
+    filters.updatedFrom !== "" ||
+    filters.updatedTo !== "" ||
+    filters.minStars !== "" ||
+    filters.maxStars !== "" ||
+    filters.beginnerFriendly ||
+    filters.goodFirstIssue ||
+    filters.helpWanted
+  )
+}
+
 export function useGithubSearch(
   keyword: string,
   mode: SearchMode,
@@ -131,7 +148,7 @@ export function useGithubSearch(
   return useQuery<SearchResponse | RepoSearchResponse>({
     queryKey: ["github-search", entityType, q, sortField, order, page],
     queryFn: fetchFn,
-    enabled: keyword.trim().length > 0 && entityType !== "foryou" && entityType !== "trending",
+    enabled: (keyword.trim().length > 0 || hasActiveFilters(filters)) && entityType !== "foryou" && entityType !== "trending",
     staleTime: 60_000,
   })
 }
