@@ -37,17 +37,19 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Issue Finder — Discover GitHub issues worth contributing to",
     description:
-      "Search millions of GitHub issues and repositories with powerful filters.",
+      "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
     url: "https://issue-finder.acharyanischal.com.np",
     siteName: "Issue Finder",
     type: "website",
     locale: "en_US",
+    images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Issue Finder — Discover GitHub issues worth contributing to",
     description:
-      "Search millions of GitHub issues and repositories with powerful filters.",
+      "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
+    images: [{ url: "/opengraph-image.png" }],
   },
   manifest: "/favicon/site.webmanifest",
   icons: {
