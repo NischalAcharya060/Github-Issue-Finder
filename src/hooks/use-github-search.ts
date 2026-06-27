@@ -131,7 +131,7 @@ export function useGithubSearch(
   return useQuery<SearchResponse | RepoSearchResponse>({
     queryKey: ["github-search", entityType, q, sortField, order, page],
     queryFn: fetchFn,
-    enabled: q.length > 0 && entityType !== "foryou" && entityType !== "trending",
+    enabled: keyword.trim().length > 0 && entityType !== "foryou" && entityType !== "trending",
     staleTime: 60_000,
   })
 }

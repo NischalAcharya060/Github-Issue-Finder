@@ -16,6 +16,7 @@ import { getRepoIssues } from "@/lib/github-api"
 import { getRepoFromUrl } from "@/lib/utils"
 import { ExportButton } from "@/components/shared/export-button"
 import { KeyboardShortcutsModal } from "@/components/shared/keyboard-shortcuts-modal"
+import { FaqSection } from "@/components/shared/faq-section"
 import { Button } from "@/components/ui/button"
 import { BarChart3, CheckSquare } from "lucide-react"
 import {
@@ -250,7 +251,10 @@ export default function Home() {
           ) : entityType === "trending" ? (
             <TrendingFeed onIssueClick={setSelectedIssue} />
           ) : !keyword && !data ? (
-            <Welcome onSearch={handleSearch} />
+            <>
+              <Welcome onSearch={handleSearch} />
+              <FaqSection />
+            </>
           ) : (
             <>
               {entityType === "issues" && (

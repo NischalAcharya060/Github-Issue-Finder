@@ -1,0 +1,34 @@
+# Issue Finder — Discover GitHub issues worth contributing to
+
+## Who we are
+Issue Finder is a search tool built by Nischal Acharya that helps open-source contributors discover GitHub issues matching their skills and interests.
+
+## What we do
+- Search millions of GitHub issues by keyword, repository, or organization
+- Filter by programming language, labels (good first issue, help wanted, bug), issue state, date range, and star count
+- Sort by relevance, creation date, comments, reactions, or repository stars
+- Personalized "For You" feed based on your interests
+- Trending issues across the open-source ecosystem
+- Save and organize issues with a Kanban board
+- Track contributions and mark issues as done
+
+## Key pages
+- Home page: https://issue-finder.acharyanischal.com.np/
+- Saved issues (requires sign-in): https://issue-finder.acharyanischal.com.np/my-issues
+- Saved repos (requires sign-in): https://issue-finder.acharyanischal.com.np/my-repos
+
+## Features
+- Real-time GitHub API search
+- Bulk selection and CSV export
+- Analytics and insights on search results
+- Keyboard shortcuts (press ? to see all)
+- Dark mode with custom accent colors
+- PWA with offline support
+
+## Technical stack
+- Framework: Next.js 16 (App Router)
+- Language: TypeScript
+- Styling: Tailwind CSS v4 + shadcn/ui
+- Database: PostgreSQL via Prisma
+- Authentication: NextAuth.js with GitHub OAuth
+- Caching: Upstash Redis

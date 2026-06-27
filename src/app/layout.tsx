@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers/providers";
 import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
 import { Toaster } from "sonner";
+import { JsonLd } from "@/components/shared/json-ld";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -97,6 +98,37 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="relative min-h-full flex flex-col">
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "Issue Finder",
+            url: "https://issue-finder.acharyanischal.com.np",
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "All",
+            description:
+              "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
+            author: {
+              "@type": "Person",
+              name: "Nischal Acharya",
+              url: "http://acharyanischal.com.np",
+            },
+            potentialAction: {
+              "@type": "SearchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate:
+                  "https://issue-finder.acharyanischal.com.np/?q={search_term_string}",
+              },
+              "query-input": "required name=search_term_string",
+            },
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+          }}
+        />
         <div
           aria-hidden
           className="bg-aurora pointer-events-none fixed inset-0 -z-10"
@@ -108,6 +140,29 @@ export default function RootLayout({
           Skip to content
         </a>
         <Providers>{children}</Providers>
+        <footer className="border-t border-border/40 bg-card/30 py-6">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between">
+            <span>
+              Built by{" "}
+              <a
+                href="http://acharyanischal.com.np"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground underline underline-offset-2 decoration-border hover:decoration-foreground transition-colors"
+              >
+                Nischal Acharya
+              </a>
+            </span>
+            <span>
+              Indexing millions of open issues across every public GitHub
+              repository
+            </span>
+            <span>
+              Updated{" "}
+              <time dateTime="2026-06-27">June 27, 2026</time>
+            </span>
+          </div>
+        </footer>
         <ServiceWorkerRegister />
         <Toaster richColors position="bottom-right" closeButton />
       </body>
