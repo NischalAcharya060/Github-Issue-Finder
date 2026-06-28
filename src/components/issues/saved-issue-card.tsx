@@ -69,8 +69,17 @@ export function SavedIssueCard({
     setIsEditing(false)
   }
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData("text/plain", item.issueId.toString())
+    e.dataTransfer.effectAllowed = "move"
+  }
+
   return (
-    <div className="group relative h-full">
+    <div
+      className="group relative h-full cursor-grab active:cursor-grabbing"
+      draggable
+      onDragStart={handleDragStart}
+    >
       <div
         className={cn(
           "relative flex h-full flex-col rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/8",

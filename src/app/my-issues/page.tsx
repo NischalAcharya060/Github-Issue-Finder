@@ -39,6 +39,43 @@ export default function MyIssuesPage() {
   const pending = patch.isPending || remove.isPending
   const [confirmRemove, setConfirmRemove] = useState<SavedIssue | null>(null)
   const [confirmBulkRemove, setConfirmBulkRemove] = useState(false)
+  const [draggedOverColumn, setDraggedOverColumn] = useState<string | null>(null)
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+  }, [])
+
+  const handleDragEnter = useCallback((colId: string) => {
+    setDraggedOverColumn(colId)
+  }, [])
+
+  const handleDragLeave = useCallback(() => {
+    setDraggedOverColumn(null)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent, targetStatus: string) => {
+    setDraggedOverColumn(null)
+    const idStr = e.dataTransfer.getData("text/plain")
+    if (!idStr) return
+    const issueId = Number(idStr)
+
+    const item = data?.find((i) => Number(i.issueId) === issueId)
+    const currentStatus = item?.status || (item?.done ? "DONE" : "BACKLOG")
+    if (currentStatus === targetStatus) return
+
+    patch.mutate({
+      issueId,
+      status: targetStatus,
+      done: targetStatus === "DONE"
+    }, {
+      onSuccess: () => {
+        toast.success(`Moved issue to ${targetStatus.replace("_", " ").toLowerCase()}`)
+      },
+      onError: () => {
+        toast.error("Failed to move issue")
+      }
+    })
+  }, [data, patch])
 
   const handleToggleSaved = useCallback((it: SavedIssue) => {
     patch.mutate(
@@ -277,6 +314,75 @@ export default function MyIssuesPage() {
               </div>
             </div>
 
+            {/* Progress Analytics Section */}
+            {allItems.length > 0 && (
+              <div className="grid gap-4 rounded-3xl border border-border/70 bg-card/65 p-5 shadow-sm shadow-foreground/[0.02] ring-1 ring-foreground/[0.03] sm:grid-cols-3">
+                <div className="flex items-center gap-4 border-b border-border/40 pb-4 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-4">
+                  <div className="relative flex size-18 shrink-0 items-center justify-center">
+                    <svg className="size-full -rotate-90">
+                      <circle
+                        cx="36"
+                        cy="36"
+                        r="30"
+                        className="stroke-secondary/70"
+                        strokeWidth="5"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="36"
+                        cy="36"
+                        r="30"
+                        className="stroke-primary transition-all duration-500 ease-out"
+                        strokeWidth="5"
+                        strokeDasharray={2 * Math.PI * 30}
+                        strokeDashoffset={
+                          2 * Math.PI * 30 -
+                          (allItems.length > 0 ? completed.length / allItems.length : 0) * 2 * Math.PI * 30
+                        }
+                        fill="transparent"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute text-sm font-bold tracking-tight tabular-nums text-foreground">
+                      {Math.round(allItems.length > 0 ? (completed.length / allItems.length) * 100 : 0)}%
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold tracking-tight">Contribution Progress</h3>
+                    <p className="text-xs text-muted-foreground leading-normal">
+                      {completed.length === allItems.length
+                        ? "🏆 Completed everything!"
+                        : `${completed.length} of ${allItems.length} issues finished. Keep going!`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="col-span-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {[
+                    { label: "Saved", count: backlog.length, color: "text-muted-foreground", bg: "bg-muted/30" },
+                    { label: "In Progress", count: inProgress.length, color: "text-amber-500", bg: "bg-amber-500/10" },
+                    { label: "In Review", count: inReview.length, color: "text-blue-500", bg: "bg-blue-500/10" },
+                    { label: "Completed", count: completed.length, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                  ].map((metric) => (
+                    <div
+                      key={metric.label}
+                      className="flex flex-col justify-between rounded-2xl border border-border/60 bg-secondary/35 p-3 transition-colors hover:bg-secondary/50"
+                    >
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                        {metric.label}
+                      </span>
+                      <div className="mt-2 flex items-baseline gap-1.5">
+                        <span className={cn("text-2xl font-bold tracking-tight tabular-nums", metric.color)}>
+                          {metric.count}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/60">issues</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {loading ? (
               /* Loading Skeletons */
               viewMode === "board" ? (
@@ -342,10 +448,20 @@ export default function MyIssuesPage() {
               <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 items-start select-none">
                 {kanbanColumns.map((col) => {
                   const Icon = col.icon
+                  const isOver = draggedOverColumn === col.id
                   return (
                     <div
                       key={col.id}
-                      className="flex flex-col rounded-2xl border border-border/80 bg-card/30 shadow-sm shadow-foreground/[0.02] ring-1 ring-foreground/[0.03] backdrop-blur-sm max-h-[80vh] min-h-[500px] overflow-hidden"
+                      onDragOver={handleDragOver}
+                      onDragEnter={() => handleDragEnter(col.id)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, col.id)}
+                      className={cn(
+                        "flex flex-col rounded-2xl border transition-all duration-200 shadow-sm shadow-foreground/[0.02] ring-1 ring-foreground/[0.03] backdrop-blur-sm max-h-[80vh] min-h-[500px] overflow-hidden",
+                        isOver
+                          ? "border-dashed border-primary/60 bg-primary/[0.03] scale-[1.01]"
+                          : "border-border/80 bg-card/30"
+                      )}
                     >
                       {/* Color-coded accent bar */}
                       <div className={cn("h-1 shrink-0", col.barClass)} />

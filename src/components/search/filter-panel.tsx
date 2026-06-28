@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Filter, RotateCcw, SlidersHorizontal, Tags, Calendar, Star, Plus, X, Check, ChevronsUpDown } from "lucide-react"
+import { Filter, RotateCcw, SlidersHorizontal, Tags, Calendar, Star, Plus, X, Check, ChevronsUpDown, Save, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -20,13 +20,12 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { LANGUAGES, ISSUE_STATES } from "@/lib/constants"
 import { LanguageIcon } from "@/components/shared/language-icon"
 import { DatePickerPopover } from "@/components/shared/date-picker-popover"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 import { cn } from "@/lib/utils"
 import type { FilterState } from "@/lib/types"
 
@@ -58,12 +57,12 @@ interface SectionProps {
 
 function Section({ icon: Icon, title, children }: SectionProps) {
   return (
-    <div>
-      <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        <Icon className="size-3" />
+    <div className="rounded-2xl border border-border/55 bg-card/45 p-3.5 shadow-sm shadow-foreground/[0.01] ring-1 ring-foreground/[0.01] transition-all hover:border-border/80">
+      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/85">
+        <Icon className="size-3.5 text-muted-foreground/60" />
         {title}
       </div>
-      <div className="mt-2 space-y-2">{children}</div>
+      <div className="mt-3 space-y-3">{children}</div>
     </div>
   )
 }
@@ -93,12 +92,12 @@ function DateInput({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex h-7 w-full items-center rounded-lg border border-input bg-transparent pl-7 pr-2 text-xs text-left text-foreground transition-[color,box-shadow,border-color] outline-none hover:border-ring focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 placeholder:text-muted-foreground cursor-pointer"
+            className="flex h-8.5 w-full items-center rounded-xl border border-border/60 bg-background/50 pl-8.5 pr-2.5 text-xs text-left text-foreground transition-all hover:bg-background/80 hover:border-primary/30 outline-none placeholder:text-muted-foreground cursor-pointer"
           >
             {value ? format(new Date(value + "T00:00:00"), "MMM d, yyyy") : <span className="text-muted-foreground">{placeholder}</span>}
           </button>
         </PopoverTrigger>
-        <Calendar className="pointer-events-none absolute left-2 top-1/2 size-3 -translate-y-1/2 text-foreground/20 dark:text-foreground/80" />
+        <Calendar className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
       </div>
       <PopoverContent className="w-auto p-0" align="start">
         <DatePickerPopover value={value} onChange={onChange} onClose={() => setOpen(false)} />
@@ -147,6 +146,38 @@ function PresetChips({
 
 export function FilterPanel({ filters, onChange }: FilterPanelProps) {
   const [customLabel, setCustomLabel] = useState("")
+  const [presetName, setPresetName] = useState("")
+
+  const [savedPresets, setSavedPresets] = useLocalStorage<Record<string, FilterState>>(
+    "saved-filter-presets",
+    {
+      "Good First Issues": { ...defaultFilters, goodFirstIssue: true },
+      "TypeScript Starters": { ...defaultFilters, language: "TypeScript", goodFirstIssue: true },
+    }
+  )
+
+  const handleSavePreset = () => {
+    const name = presetName.trim()
+    if (!name) return
+    setSavedPresets((prev) => ({
+      ...prev,
+      [name]: { ...filters },
+    }))
+    setPresetName("")
+  }
+
+  const handleDeletePreset = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSavedPresets((prev) => {
+      const next = { ...prev }
+      delete next[name]
+      return next
+    })
+  }
+
+  const loadPreset = (presetFilters: FilterState) => {
+    onChange(presetFilters)
+  }
 
   const update = (partial: Partial<FilterState>) => {
     onChange({ ...filters, ...partial })
@@ -184,7 +215,7 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
   return (
     <div className="space-y-4 p-4 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 px-1">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/15">
             <Filter className="size-3.5 text-primary" />
@@ -196,17 +227,87 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
             </span>
           )}
         </div>
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={() => onChange(defaultFilters)}
-            className="gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <RotateCcw className="size-3" />
-            Reset
-          </Button>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="xs"
+                className="gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <Bookmark className="size-3" />
+                Presets
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3 space-y-3" align="end">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/85">
+                <Bookmark className="size-3 text-muted-foreground/60" />
+                Filter Presets
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {Object.keys(savedPresets).length === 0 ? (
+                  <span className="text-[10px] text-muted-foreground/50">No presets saved yet</span>
+                ) : (
+                  Object.entries(savedPresets).map(([name, presetFilters]) => {
+                    const isActive = JSON.stringify(filters) === JSON.stringify(presetFilters)
+                    return (
+                      <div
+                        key={name}
+                        onClick={() => loadPreset(presetFilters)}
+                        className={cn(
+                          "flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-medium transition-all cursor-pointer border",
+                          isActive
+                            ? "bg-primary/10 text-primary border-primary/20"
+                            : "bg-background text-muted-foreground border-border/70 hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        <span className="truncate max-w-[120px]">{name}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeletePreset(name, e)}
+                          className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive shrink-0 cursor-pointer"
+                          title={`Delete preset ${name}`}
+                        >
+                          <X className="size-2.5" />
+                        </button>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <Input
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  placeholder="Preset name..."
+                  className="h-7 text-xs bg-background border-border/60 py-0.5 px-2 flex-1"
+                />
+                <Button
+                  size="xs"
+                  onClick={handleSavePreset}
+                  disabled={!presetName.trim()}
+                  className="h-7 px-2 text-xs gap-1 cursor-pointer"
+                >
+                  <Save className="size-3" />
+                  Save
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => onChange(defaultFilters)}
+              className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/30 cursor-pointer shrink-0 transition-colors"
+              title="Reset all filters"
+            >
+              <RotateCcw className="size-3.5" />
+              <span className="sr-only">Reset</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Issue section */}
@@ -216,19 +317,19 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
             <Button
               variant="outline"
               role="combobox"
-              className="h-7 w-full justify-between px-2 text-xs font-normal"
+              className="h-8.5 w-full justify-between px-3 text-xs font-medium rounded-xl bg-background/50 border-border/60 hover:bg-background/80 hover:border-primary/30 hover:text-foreground text-muted-foreground transition-all cursor-pointer"
             >
               <span className="flex items-center gap-1.5 truncate">
                 {filters.language !== "all" ? (
                   <>
-                    <LanguageIcon language={filters.language} className="size-3.5 shrink-0" />
-                    {filters.language}
+                    <LanguageIcon language={filters.language} className="size-3.5 shrink-0 text-foreground" />
+                    <span className="text-foreground">{filters.language}</span>
                   </>
                 ) : (
-                  "Any language"
+                  <span>Any language</span>
                 )}
               </span>
-              <ChevronsUpDown className="size-3 shrink-0 opacity-50" />
+              <ChevronsUpDown className="size-3 shrink-0 opacity-50 text-muted-foreground" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
@@ -265,7 +366,7 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
           value={filters.state}
           onValueChange={(v) => update({ state: v as "all" | "open" | "closed" })}
         >
-          <SelectTrigger className="h-7 w-full text-xs">
+          <SelectTrigger className="h-8.5 w-full text-xs font-medium rounded-xl bg-background/50 border-border/60 hover:bg-background/80 hover:border-primary/30 transition-all cursor-pointer">
             <SelectValue placeholder="All states" />
           </SelectTrigger>
           <SelectContent>
@@ -279,16 +380,16 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
       </Section>
 
       {/* Time section */}
-      <div className="border-t border-border/50 pt-3">
-        <Section icon={Calendar} title="Time">
+      <Section icon={Calendar} title="Time">
+        <div className="space-y-3.5">
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">Created</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75">Created</span>
               {(filters.createdFrom || filters.createdTo) && (
                 <button
                   type="button"
                   onClick={() => update({ createdFrom: "", createdTo: "" })}
-                  className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground hover:underline"
+                  className="cursor-pointer text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Clear
                 </button>
@@ -296,10 +397,10 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <DateInput value={filters.createdFrom} onChange={(v) => update({ createdFrom: v })} placeholder="From" />
-              <span className="shrink-0 text-[10px] text-muted-foreground/40">—</span>
+              <span className="shrink-0 text-[10px] text-muted-foreground/45">—</span>
               <DateInput value={filters.createdTo} onChange={(v) => update({ createdTo: v })} placeholder="To" />
             </div>
-            <div className="mt-1.5">
+            <div className="mt-2">
               <PresetChips
                 activeFrom={filters.createdFrom}
                 activeTo={filters.createdTo}
@@ -308,14 +409,14 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
             </div>
           </div>
 
-          <div className="border-t border-border/30 pt-2.5">
+          <div className="border-t border-border/30 pt-3">
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">Updated</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75">Updated</span>
               {(filters.updatedFrom || filters.updatedTo) && (
                 <button
                   type="button"
                   onClick={() => update({ updatedFrom: "", updatedTo: "" })}
-                  className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground hover:underline"
+                  className="cursor-pointer text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Clear
                 </button>
@@ -323,56 +424,55 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <DateInput value={filters.updatedFrom} onChange={(v) => update({ updatedFrom: v })} placeholder="From" />
-              <span className="shrink-0 text-[10px] text-muted-foreground/40">—</span>
+              <span className="shrink-0 text-[10px] text-muted-foreground/45">—</span>
               <DateInput value={filters.updatedTo} onChange={(v) => update({ updatedTo: v })} placeholder="To" />
             </div>
           </div>
-        </Section>
-      </div>
+        </div>
+      </Section>
 
       {/* Stars section */}
-      <div className="border-t border-border/50 pt-3">
-        <Section icon={Star} title="Stars">
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min={0}
-              placeholder="Min"
-              value={filters.minStars}
-              onChange={(e) => update({ minStars: e.target.value })}
-              className="h-7 text-xs"
-            />
-            <span className="text-muted-foreground/50">-</span>
-            <Input
-              type="number"
-              min={0}
-              placeholder="Max"
-              value={filters.maxStars}
-              onChange={(e) => update({ maxStars: e.target.value })}
-              className="h-7 text-xs"
-            />
-          </div>
-        </Section>
-      </div>
+      <Section icon={Star} title="Stars">
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            placeholder="Min"
+            value={filters.minStars}
+            onChange={(e) => update({ minStars: e.target.value })}
+            className="h-8.5 rounded-xl bg-background/50 border-border/60 text-xs focus-visible:ring-2 focus-visible:ring-primary/45"
+          />
+          <span className="text-muted-foreground/50 text-xs">—</span>
+          <Input
+            type="number"
+            min={0}
+            placeholder="Max"
+            value={filters.maxStars}
+            onChange={(e) => update({ maxStars: e.target.value })}
+            className="h-8.5 rounded-xl bg-background/50 border-border/60 text-xs focus-visible:ring-2 focus-visible:ring-primary/45"
+          />
+        </div>
+      </Section>
 
       {/* Labels section */}
-      <div className="border-t border-border/50 pt-3">
-        <Section icon={Tags} title="Labels">
-          <div className="flex items-center gap-2">
+      <Section icon={Tags} title="Labels">
+        <div className="space-y-3.5">
+          <div className="flex items-center gap-1.5">
             <Input
               value={customLabel}
               onChange={(e) => setCustomLabel(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addLabel()}
               placeholder="Add label..."
-              className="h-7 flex-1 text-xs"
+              className="h-8.5 flex-1 rounded-xl bg-background/50 border-border/60 text-xs focus-visible:ring-2 focus-visible:ring-primary/45"
             />
             <Button
-              variant="ghost"
-              size="icon-xs"
+              variant="outline"
+              size="icon-sm"
               onClick={addLabel}
               disabled={!customLabel.trim()}
+              className="h-8.5 w-8.5 rounded-xl border border-border/60 bg-background/50 cursor-pointer shrink-0"
             >
-              <Plus className="size-3" />
+              <Plus className="size-3.5" />
             </Button>
           </div>
 
@@ -382,12 +482,12 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
                 <Badge
                   key={label}
                   variant="outline"
-                  className="gap-1 pr-1 text-[10px]"
+                  className="gap-1 pr-1 text-[10px] rounded-lg"
                 >
                   {label}
                   <button
                     onClick={() => removeLabel(label)}
-                    className="hover:text-destructive"
+                    className="hover:text-destructive cursor-pointer"
                   >
                     <X className="size-2.5" />
                   </button>
@@ -396,37 +496,29 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
             </div>
           )}
 
-          {(
-            [
-              ["beginner", "Beginner friendly", filters.beginnerFriendly],
-              ["good-first-issue", "Good first issue", filters.goodFirstIssue],
-              ["help-wanted", "Help wanted", filters.helpWanted],
-            ] as const
-          ).map(([id, label, checked]) => (
-            <div key={id} className="flex items-center gap-2">
-              <Checkbox
-                id={id}
-                checked={checked}
-                onCheckedChange={(v) =>
-                  update({
-                    [id === "beginner"
-                      ? "beginnerFriendly"
-                      : id === "good-first-issue"
-                        ? "goodFirstIssue"
-                        : "helpWanted"]: v === true,
-                  })
-                }
-              />
-              <Label
-                htmlFor={id}
-                className="text-xs font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { id: "beginnerFriendly", label: "Beginner friendly", active: filters.beginnerFriendly, color: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/25" },
+              { id: "goodFirstIssue", label: "Good first issue", active: filters.goodFirstIssue, color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25" },
+              { id: "helpWanted", label: "Help wanted", active: filters.helpWanted, color: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25" },
+            ].map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => update({ [chip.id]: !chip.active })}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-[11px] font-semibold cursor-pointer transition-all",
+                  chip.active
+                    ? `${chip.color} ring-1 ring-primary/10 shadow-sm`
+                    : "bg-background text-muted-foreground border-border/80 hover:bg-muted/30 hover:text-foreground"
+                )}
               >
-                {label}
-              </Label>
-            </div>
-          ))}
-        </Section>
-      </div>
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Section>
     </div>
   )
 }

@@ -94,7 +94,7 @@ const icons: Record<string, IconType> = {
   "Protocol Buffer": SiProtocolsdotio,
 }
 
-const colors: Record<string, string> = {
+export const languageColors: Record<string, string> = {
   JavaScript: "#f7df1e",
   TypeScript: "#3178c6",
   Python: "#3572a5",
@@ -145,5 +145,5 @@ const colors: Record<string, string> = {
 export function LanguageIcon({ language, className }: { language: string; className?: string }) {
   const Icon = icons[language]
   if (!Icon) return null
-  return <Icon className={className} style={{ color: colors[language] }} />
+  return <Icon className={className} style={{ color: languageColors[language] }} />
 }
