@@ -56,8 +56,8 @@ export function Navbar({
       className={cn(
         "glass sticky top-0 z-30 border-b transition-all duration-300",
         scrolled
-          ? "border-border/60 shadow-sm shadow-foreground/[0.03]"
-          : "border-transparent"
+          ? "border-border/45 bg-background/80 shadow-md shadow-foreground/[0.02]"
+          : "border-transparent bg-background/30"
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
@@ -91,15 +91,17 @@ export function Navbar({
         />
 
         {entityType === "foryou" ? (
-          <div className="mx-auto flex-1 max-w-2xl text-center">
-            <span className="text-xs font-semibold text-muted-foreground/80 tracking-wide uppercase">
-              ✨ Personalized Recommendation Stream
+          <div className="mx-auto flex-1 max-w-2xl flex items-center justify-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/8 px-3.5 py-1.5 text-[10px] font-bold text-primary tracking-wide uppercase ring-1 ring-primary/15 animate-pulse shrink-0">
+              <Sparkles className="size-3 text-primary" />
+              Personalized Recommendation Stream
             </span>
           </div>
         ) : entityType === "trending" ? (
-          <div className="mx-auto flex-1 max-w-2xl text-center">
-            <span className="text-xs font-semibold text-muted-foreground/80 tracking-wide uppercase">
-              🔥 Trending Across GitHub
+          <div className="mx-auto flex-1 max-w-2xl flex items-center justify-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/8 px-3.5 py-1.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-wide uppercase ring-1 ring-amber-500/15 animate-pulse shrink-0">
+              <TrendingUp className="size-3" />
+              Trending Across GitHub
             </span>
           </div>
         ) : (
