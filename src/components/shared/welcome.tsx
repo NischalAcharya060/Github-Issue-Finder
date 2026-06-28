@@ -129,7 +129,10 @@ export function Welcome({ onSearch }: WelcomeProps) {
       </FadeInUp>
 
       <FadeInUp delay={0.14}>
-        <h1 className="mb-4 max-w-2xl text-balance text-4xl font-bold tracking-tight sm:text-5xl">
+        <h1
+          data-speakable
+          className="mb-4 max-w-2xl text-balance text-4xl font-bold tracking-tight sm:text-5xl"
+        >
           Find issues worth{" "}
           <span className="text-gradient">contributing to</span>
         </h1>

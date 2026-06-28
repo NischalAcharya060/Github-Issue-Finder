@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/my-repos",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "My Repos — Issue Finder",
     description:

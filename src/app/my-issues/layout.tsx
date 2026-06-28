@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/my-issues",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "My Issues — Issue Finder",
     description:

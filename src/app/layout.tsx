@@ -105,32 +105,54 @@ export default function RootLayout({
         <JsonLd
           data={{
             "@context": "https://schema.org",
-            "@type": "WebApplication",
-            name: "Issue Finder",
-            url: "https://issue-finder.acharyanischal.com.np",
-            applicationCategory: "DeveloperApplication",
-            operatingSystem: "All",
-            description:
-              "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
-            author: {
-              "@type": "Person",
-              name: "Nischal Acharya",
-              url: "http://acharyanischal.com.np",
-            },
-            potentialAction: {
+            "@type": "WebSite",
+            "name": "Issue Finder",
+            "url": "https://issue-finder.acharyanischal.com.np",
+            "description": "Discover GitHub issues worth contributing to with powerful filters.",
+            "potentialAction": {
               "@type": "SearchAction",
-              target: {
+              "target": {
                 "@type": "EntryPoint",
-                urlTemplate:
-                  "https://issue-finder.acharyanischal.com.np/?q={search_term_string}",
+                "urlTemplate": "https://issue-finder.acharyanischal.com.np/?q={search_term_string}"
               },
-              "query-input": "required name=search_term_string",
+              "query-input": "required name=search_term_string"
+            }
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Issue Finder",
+            "url": "https://issue-finder.acharyanischal.com.np",
+            "image": "https://issue-finder.acharyanischal.com.np/opengraph-image",
+            "screenshot": "https://issue-finder.acharyanischal.com.np/opengraph-image",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "All",
+            "description":
+              "Search millions of GitHub issues and repositories with powerful filters. Find good-first-issues, help-wanted tasks, and hidden open-source opportunities.",
+            "softwareVersion": "1.0.0",
+            "genre": "Software Development",
+            "license": "https://opensource.org/licenses/MIT",
+            "author": {
+              "@type": "Person",
+              "name": "Nischal Acharya",
+              "url": "http://acharyanischal.com.np",
+              "sameAs": [
+                "https://github.com/NischalAcharya060",
+                "https://linkedin.com/in/nischalacharya"
+              ]
             },
-            offers: {
+            "publisher": {
+              "@type": "Person",
+              "name": "Nischal Acharya",
+              "url": "http://acharyanischal.com.np"
+            },
+            "offers": {
               "@type": "Offer",
-              price: "0",
-              priceCurrency: "USD",
-            },
+              "price": "0",
+              "priceCurrency": "USD"
+            }
           }}
         />
         <JsonLd
