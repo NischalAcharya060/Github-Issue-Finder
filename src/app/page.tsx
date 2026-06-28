@@ -51,13 +51,46 @@ const defaultFilters: FilterState = {
   helpWanted: false,
 }
 
+function getInitialParams() {
+  if (typeof window === "undefined") return { keyword: "", searchMode: "keyword" as SearchMode, entityType: "issues" as EntityType, sort: "created-desc" as SortOption, page: 1, filters: { ...defaultFilters } }
+  const params = new URLSearchParams(window.location.search)
+  const keyword = params.get("q") ?? ""
+  const mode = params.get("mode")
+  const searchMode: SearchMode = mode === "keyword" || mode === "repo" || mode === "org" ? mode : "keyword"
+  const type = params.get("type")
+  const entityType: EntityType = type === "issues" || type === "repositories" || type === "foryou" || type === "trending" || type === "organizations" ? type : "issues"
+  const pageVal = params.get("page")
+  const page = pageVal ? parseInt(pageVal, 10) || 1 : 1
+  const sortVal = params.get("sort")
+  const sort: SortOption = sortVal ? sortVal as SortOption : "created-desc"
+  const filters = { ...defaultFilters }
+  const lang = params.get("lang")
+  if (lang) filters.language = lang
+  const stateVal = params.get("state")
+  if (stateVal === "all" || stateVal === "open" || stateVal === "closed") filters.state = stateVal
+  const labelsVal = params.get("labels")
+  if (labelsVal) filters.labels = labelsVal.split(",").filter(Boolean)
+  const minStars = params.get("minStars")
+  if (minStars) filters.minStars = minStars
+  const maxStars = params.get("maxStars")
+  if (maxStars) filters.maxStars = maxStars
+  const beginnerFriendly = params.get("beginnerFriendly")
+  if (beginnerFriendly === "true") filters.beginnerFriendly = true
+  const goodFirstIssue = params.get("goodFirstIssue")
+  if (goodFirstIssue === "true") filters.goodFirstIssue = true
+  const helpWanted = params.get("helpWanted")
+  if (helpWanted === "true") filters.helpWanted = true
+  return { keyword, searchMode, entityType, sort, page, filters }
+}
+
 export default function Home() {
-  const [searchMode, setSearchMode] = useState<SearchMode>("keyword")
-  const [entityType, setEntityType] = useState<EntityType>("issues")
-  const [keyword, setKeyword] = useState("")
-  const [filters, setFilters] = useState<FilterState>(defaultFilters)
-  const [sort, setSort] = useState<SortOption>("created-desc")
-  const [page, setPage] = useState(1)
+  const initial = getInitialParams()
+  const [searchMode, setSearchMode] = useState<SearchMode>(initial.searchMode)
+  const [entityType, setEntityType] = useState<EntityType>(initial.entityType)
+  const [keyword, setKeyword] = useState(initial.keyword)
+  const [filters, setFilters] = useState<FilterState>(initial.filters)
+  const [sort, setSort] = useState<SortOption>(initial.sort)
+  const [page, setPage] = useState(initial.page)
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
   const [selectedIssue, setSelectedIssue] = useState<number | null>(null)
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null)
@@ -68,7 +101,6 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set())
   const [bulkMode, setBulkMode] = useState(false)
-  const [isInitialized, setIsInitialized] = useState(false)
   const [, setRecentSearches] = useLocalStorage<string[]>("recent-searches", [])
 
   const debouncedKeyword = useDebounce(keyword, 400)
@@ -223,76 +255,9 @@ export default function Home() {
       : "Issue Finder — Discover GitHub issues worth contributing to"
   }, [keyword])
 
-  // Initialize states from URL parameters on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const params = new URLSearchParams(window.location.search)
-
-    const q = params.get("q")
-    if (q) setKeyword(q)
-
-    const mode = params.get("mode")
-    if (mode === "keyword" || mode === "repo" || mode === "org") {
-      setSearchMode(mode as SearchMode)
-    }
-
-    const type = params.get("type")
-    if (
-      type === "issues" ||
-      type === "repositories" ||
-      type === "foryou" ||
-      type === "trending" ||
-      type === "organizations"
-    ) {
-      setEntityType(type as EntityType)
-    }
-
-    const pageVal = params.get("page")
-    if (pageVal) {
-      const parsed = parseInt(pageVal, 10)
-      if (!isNaN(parsed)) setPage(parsed)
-    }
-
-    const sortVal = params.get("sort")
-    if (sortVal) setSort(sortVal as SortOption)
-
-    // Filters
-    const newFilters = { ...defaultFilters }
-    const lang = params.get("lang")
-    if (lang) newFilters.language = lang
-
-    const stateVal = params.get("state")
-    if (stateVal === "all" || stateVal === "open" || stateVal === "closed") {
-      newFilters.state = stateVal as "all" | "open" | "closed"
-    }
-
-    const labelsVal = params.get("labels")
-    if (labelsVal) {
-      newFilters.labels = labelsVal.split(",").filter(Boolean)
-    }
-
-    const minStars = params.get("minStars")
-    if (minStars) newFilters.minStars = minStars
-
-    const maxStars = params.get("maxStars")
-    if (maxStars) newFilters.maxStars = maxStars
-
-    const beginnerFriendly = params.get("beginnerFriendly")
-    if (beginnerFriendly === "true") newFilters.beginnerFriendly = true
-
-    const goodFirstIssue = params.get("goodFirstIssue")
-    if (goodFirstIssue === "true") newFilters.goodFirstIssue = true
-
-    const helpWanted = params.get("helpWanted")
-    if (helpWanted === "true") newFilters.helpWanted = true
-
-    setFilters(newFilters)
-    setIsInitialized(true)
-  }, [])
-
   // Sync state changes back to the URL search parameters
   useEffect(() => {
-    if (!isInitialized || typeof window === "undefined") return
+    if (typeof window === "undefined") return
     const params = new URLSearchParams()
 
     if (keyword) params.set("q", keyword)
@@ -321,7 +286,7 @@ export default function Home() {
         queryString ? `?${queryString}` : window.location.pathname
       )
     }
-  }, [keyword, searchMode, entityType, page, sort, filters, isInitialized])
+  }, [keyword, searchMode, entityType, page, sort, filters])
 
   return (
     <div className="flex min-h-dvh flex-col">
