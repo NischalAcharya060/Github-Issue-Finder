@@ -84,36 +84,36 @@
 }
 
 .dark {
-  --background: oklch(0.13 0 0);
-  --foreground: oklch(1 0 0);
-  --card: oklch(0.17 0 0);
-  --card-foreground: oklch(1 0 0);
-  --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(1 0 0);
+  --background: #1a1a1a;
+  --foreground: #ededed;
+  --card: #222222;
+  --card-foreground: #ededed;
+  --popover: #222222;
+  --popover-foreground: #ededed;
   --primary: oklch(0.65 0.16 252);
   --primary-foreground: oklch(0.16 0.03 260);
-  --secondary: oklch(0.2 0 0);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(1 0 0);
-  --accent: oklch(0.25 0.08 252);
-  --accent-foreground: oklch(0.85 0.14 252);
+  --secondary: #2b2b2b;
+  --secondary-foreground: #ededed;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #2e2e2e;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.6 0.18 25);
-  --border: oklch(0.22 0 0);
-  --input: oklch(0.22 0 0);
+  --border: #303030;
+  --input: #303030;
   --ring: oklch(0.65 0.16 252 / 0.35);
   --chart-1: oklch(0.65 0.16 252);
   --chart-2: oklch(0.6 0.15 200);
   --chart-3: oklch(0.7 0.15 280);
   --chart-4: oklch(0.55 0.14 180);
   --chart-5: oklch(0.68 0.16 130);
-  --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(1 0 0);
+  --sidebar: #1e1e1e;
+  --sidebar-foreground: #ededed;
   --sidebar-primary: oklch(0.65 0.16 252);
   --sidebar-primary-foreground: oklch(0.16 0.03 260);
-  --sidebar-accent: oklch(0.25 0.08 252);
-  --sidebar-accent-foreground: oklch(0.85 0.14 252);
-  --sidebar-border: oklch(0.22 0 0);
+  --sidebar-accent: #2b2b2b;
+  --sidebar-accent-foreground: #ededed;
+  --sidebar-border: #282828;
   --sidebar-ring: oklch(0.65 0.16 252 / 0.35);
 }
 
@@ -473,13 +473,53 @@
 
   /* Blue gradient ring used on hover for premium cards */
   .card-glow {
-    background-image: linear-gradient(
+    background-image: var(--card-glow, linear-gradient(
       to bottom,
       color-mix(in oklch, var(--primary) 22%, transparent),
       transparent
-    );
+    ));
   }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-shimmer::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.16) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+  content: "";
+}
+
+.dark .animate-shimmer::after {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.03) 20%,
+    rgba(255, 255, 255, 0.08) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
 
 /* Custom scrollbar for kanban columns and scrollable areas */
 .scrollbar-thin {

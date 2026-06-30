@@ -17,6 +17,7 @@ import { StatePanel } from "@/components/shared/state-panel"
 import { Stagger, StaggerItem } from "@/components/motion/motion-primitives"
 import { useIgnoredRepos } from "@/hooks/use-ignored-repos"
 import { useSavedReposMap, useToggleSaveRepo } from "@/hooks/use-saved-repos"
+import { languageColors } from "@/components/shared/language-icon"
 import type { RepoSearchResponse, GitHubRepo } from "@/lib/types"
 
 interface RepoListProps {
@@ -106,8 +107,15 @@ function RepoCard({ repo, onClick }: RepoCardProps) {
     toggle.mutate({ repo, saved: !isSaved })
   }
 
+  const langColor = repo.language ? languageColors[repo.language] : null
+  const cardGlowStyle = langColor
+    ? ({
+        "--card-glow": `linear-gradient(to bottom, ${langColor}44, transparent)`
+      } as React.CSSProperties)
+    : undefined
+
   return (
-    <div className="group relative h-full">
+    <div className="group relative h-full" style={cardGlowStyle}>
       <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <button
         onClick={onClick}

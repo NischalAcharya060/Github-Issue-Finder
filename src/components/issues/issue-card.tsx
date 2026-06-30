@@ -29,8 +29,17 @@ export const IssueCard = memo(function IssueCard({ issue, selected, onToggleSele
   const { theme } = useTheme()
   const isDark = theme === "dark"
 
+  const colors = issue.labels.slice(0, 2).map((l) => l.color ? `#${l.color}` : null).filter(Boolean) as string[]
+  const cardGlowStyle = colors.length > 0
+    ? ({
+        "--card-glow": colors.length === 1
+          ? `linear-gradient(to bottom, ${colors[0]}44, transparent)`
+          : `linear-gradient(to bottom, ${colors[0]}38, ${colors[1]}28, transparent)`
+      } as React.CSSProperties)
+    : undefined
+
   return (
-    <div className="group relative h-full">
+    <div className="group relative h-full" style={cardGlowStyle}>
       <div className="card-glow absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div
         className={cn(

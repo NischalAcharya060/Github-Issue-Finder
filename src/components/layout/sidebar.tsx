@@ -17,7 +17,7 @@ export function Sidebar({
 }: SidebarProps) {
   return (
     <div className="sticky top-20">
-      <div className="rounded-2xl border border-border/70 bg-card/60 shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] backdrop-blur-sm">
+      <div className="rounded-2xl border border-border/70 bg-card/60 shadow-sm shadow-foreground/[0.03] ring-1 ring-foreground/[0.04] backdrop-blur-sm max-h-[calc(100vh-7.5rem)] overflow-y-auto scrollbar-thin">
         <FilterPanel filters={filters} onChange={onFiltersChange} />
         <div className="border-t border-border/50" />
         <RecentSearches onSelect={onSelectRecentSearch} />
