@@ -151,8 +151,8 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
   const [savedPresets, setSavedPresets] = useLocalStorage<Record<string, FilterState>>(
     "saved-filter-presets",
     {
-      "Good First Issues": { ...defaultFilters, goodFirstIssue: true },
-      "TypeScript Starters": { ...defaultFilters, language: "TypeScript", goodFirstIssue: true },
+      "Good First Issues": { ...defaultFilters, state: "open", goodFirstIssue: true },
+      "TypeScript Starters": { ...defaultFilters, state: "open", language: "TypeScript", goodFirstIssue: true },
     }
   )
 
